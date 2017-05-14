@@ -1,0 +1,574 @@
+<body></body>
+<audio id="theme1" src="Audio/star-wars-cantina-song.mp3" onended="theme1End()"></audio>
+<canvas id="graphics" width=600 height=400 style="position:absolute;top:0;left:0;background-image:url('Images/background.png');"></canvas>
+<script type="text/javascript" src="Config/mapLevels.json"></script>
+
+<script>
+var gameCanvas = document.getElementById("graphics");
+var grafx = gameCanvas.getContext('2d');
+
+var player = new Object("Images/luke-right.png",280,200,24,41);
+var beam = new Object("Images/beam.png",2400,200-41,32,3);
+var boba = new Object("Images/boba.png",2400,200-41,32,3); //dancing image when hit by beam
+var missile = new Object("Images/8.png",6500,50,3,32);
+
+
+
+var alpha  = 1;     // alpha channel to fade out when we're dead
+var decayRate=.01;  // fades out slower if boba fett kills us
+var SCALE  = 20;    // used to make the coins change size
+var DIRECTION = 1;  //
+
+var X_VELOCITY = 3;
+var Y_VELOCITY = 5;
+
+player.Gravity = 20;
+player.Weight = 0.1;
+
+/*  up: 38  left: 37  right: 39  space: 32 */
+
+var keys = [];
+
+// create yourself a simple function that let's you start/stop/play different tracks
+var theme1 = document.getElementById("theme1");
+    theme1.play();
+function theme1End() {
+    theme1.play();
+}
+
+// read your sound files in to an array of objects from a config file
+// then play your sounds with one function playSound("jump")
+// this way you can easily swap assets by changing the config
+// you can also manage what to do if a file isn't available for some reason
+// what happens when your game has 150,000 mp3's? 150,000 variables is tough to manage!
+var sndJump = new Audio("Audio/Jump.mp3");
+var sndSaberOn = new Audio("Audio/light-saber-on.mp3");
+var sndCoin = new Audio("Audio/coin.wav");
+var sndDies = new Audio("Audio/luke_dies.wav");
+var sndBeam = new Audio("Audio/blaster-firing.mp3");
+var sndR2D2 = new Audio("Audio/R2D2-yeah.mp3");
+var sndYoda = new Audio("Audio/Yoda_no_try.mp3");
+var sndChewie = new Audio("Audio/Chewbacca_roar.mp3");
+var sndC3P0 = new Audio("Audio/c3p0_against_my_programming.mp3");
+var sndHanSolo = new Audio("Audio/HanSolo_that_bad_huh.mp3");
+
+
+
+
+// var myMap = JSON.parse(mapLevels);
+//   console.log(myMap.x);
+
+
+
+// define your block object down to what sound it should play if it's hit
+// CREATE a map FILE AND a FUNCTION TO READ the FILE IN
+var maxBlock = 125;
+var block = new Array();
+for (var i=0; i<=5;i++) {
+  block[i] = new Object("Images/block.png",i*32+280,300,32,32);
+}
+  block[6] = new Object("Images/block.png",651,333,32,32); //R2D2's block
+  block[7] = new Object("Images/block.png",550,200,32,32);
+  block[8] = new Object("Images/R2D2-front.png",651,300,20,34); //R2D2
+  block[9] = new Object("Images/block.png",700,100,32,32);
+  block[10] = new Object("Images/block.png",800,150,32,32);
+for (var i=11; i<=20;i++) {
+  block[i] = new Object("Images/block3.png",i*32+2550,300,32,32); //storm trooper battle square
+}
+  block[21] = new Object("Images/block.png",1070,100,32,32);
+  block[22] = new Object("Images/block.png",1240,150,32,32);
+  block[23] = new Object("Images/block.png",1300,175,32,32);
+  block[24] = new Object("Images/block.png",1350,200,32,32);
+  block[25] = new Object("Images/block.png",1400,150,32,32);
+  block[26] = new Object("Images/block.png",1455,135,32,32);
+  block[27] = new Object("Images/C3P0-front.png",1500,220,20,41); //C3P0
+for (var i=28; i<=30;i++) {
+  block[i] = new Object("Images/block2.png",i*32+1650,300,20,32); //Yoda's block
+}
+  block[31] = new Object("Images/block.png",1670,100,32,32);
+  block[32] = new Object("Images/block.png",1740,150,32,32);
+  block[33] = new Object("Images/block.png",1800,175,32,32);
+  block[34] = new Object("Images/block.png",1950,200,32,32);
+  block[35] = new Object("Images/block.png",2000,150,32,32);
+  block[36] = new Object("Images/block.png",2055,135,32,32);
+  block[37] = new Object("Images/Chewie-front.png",2100,205,32,50); //Chewbacca
+  block[38] = new Object("Images/block.png",2200,150,32,32);
+  block[39] = new Object("Images/block.png",2265,135,32,32);
+  block[40] = new Object("Images/block.png",1500,260,32,32); //C3P0's block
+  block[41] = new Object("Images/block.png",2100,253,32,32);  //Chewbacca's block
+  block[42] = new Object("Images/yoda-front.png",i*32+1586,267,32,34); //Yoda
+  block[43] = new Object("Images/block3.png",3300,200,32,32);
+  block[44] = new Object("Images/block3.png",3400,100,32,32);
+  block[45] = new Object("Images/block3.png",3500,150,32,32);
+  block[46] = new Object("Images/block3.png",3600,225,32,32);
+  block[47] = new Object("Images/block3.png",3700,300,32,32);
+  block[48] = new Object("Images/block3.png",3800,270,32,32);
+  block[49] = new Object("Images/block3.png",3900,210,32,32);
+  block[50] = new Object("Images/block3.png",4000,230,32,32);
+for (var i=51; i<=56;i++) {
+  block[i] = new Object("Images/block4.png",i*32+2700,200,32,32);
+}
+  block[57] = new Object("Images/Storm-front.png",3180,300-41,32,41); //storm trooper 1
+  block[58] = new Object("Images/HanSolo-front.png",i*32+2590,200-41,20,41); //Han Solo
+  block[59] = new Object("Images/Storm-front.png",4200,190-41,32,41); //storm trooper 2
+  block[60] = new Object("Images/block3.png",4200,190,32,32); //storm trooper 2 block
+  block[61] = new Object("Images/block3.png",4200-32,190,32,32);
+
+  block[121] = new Object("Images/boba_fett.png",6500,50-41,20,41); //boba fett enemy
+  block[125] = new Object("Images/blank.png",6820,350,32,32); // range 2 boba fett battle
+
+  for (var i=91; i<=110;i++) {
+    block[i] = new Object("Images/block5.png",i*32+3300,350,32,32); //boba fett battle square level 1
+  }
+  for (var i=111; i<=113;i++) {
+    block[i] = new Object("Images/block5.png",i*32+2750,250,32,32); //boba fett battle square level 2 left
+  }
+  for (var i=122; i<=124;i++) {
+    block[i] = new Object("Images/block5.png",i*32+2570,250,32,32); //boba fett battle square level 2 center
+  }
+  for (var i=114; i<=116;i++) {
+    block[i] = new Object("Images/block5.png",i*32+3000,250,32,32); //boba fett battle square level 2 right
+  }
+  for (var i=117; i<=118;i++) {
+    block[i] = new Object("Images/block5.png",i*32+2670,150,32,32); //boba fett battle square level 3 left
+  }
+  for (var i=119; i<=120;i++) {
+    block[i] = new Object("Images/block5.png",i*32+2750,150,32,32); //boba fett battle square level 3 right
+  }
+
+
+  function randomBlocks(start, img, number, rangeX1, rangeX2) {
+    for (var i=start; i <= number; i++) {
+      block[i] = new Object(img,Math.floor(Math.random()*(rangeX2-rangeX1+1)+rangeX1),
+                                Math.floor(Math.random()*(300-70+1)+70),32,32);
+    }
+  }
+
+  randomBlocks(62,"Images/asteroid.png",78,4600,6000);
+  randomBlocks(79,"Images/asteroid2.png",90,4800,6200);
+
+  var maxCoin = 20;
+  var coin = new Array();
+  function randomCoins(start, img, number, rangeX1, rangeX2, width, height) {
+    for (var i=start; i <= number; i++) {
+      coin[i] = new Object(img,Math.floor(Math.random()*(rangeX2-rangeX1+1)+rangeX1),
+                                Math.floor(Math.random()*(300-70+1)+70),width,height);
+    }
+  }
+
+  randomCoins(0,"Images/coin.png",20,300,8000,5,5);
+
+
+
+
+
+
+var lastFrameTimeMs = 0; // The last time the loop was run
+var maxFPS = 10; // The maximum FPS we want to allow
+var delta = 0;
+// We want to simulate 1000 ms / 60 FPS = 16.667 ms per frame every time we run update()
+var timestep = 1000 / 60;
+
+var running = false,
+    started = false;
+
+function stop() {
+    running = false;
+    started = false;
+    cancelAnimationFrame(frameID);
+}
+
+function start() {
+    if (!started) { // don't request multiple frames
+        started = true;
+        // Dummy frame to get our timestamps and initial drawing right.
+        // Track the frame ID so we can cancel it if we stop quickly.
+        frameID = requestAnimationFrame(function(timestamp) {
+            render(1); // initial render
+            running = true;
+            // reset some time tracking variables
+            lastFrameTimeMs = timestamp;
+            lastFpsUpdate = timestamp;
+            framesThisSecond = 0;
+            // actually start the main loop
+            frameID = requestAnimationFrame(game);
+        });
+    }
+}
+
+function game(timestamp){
+  // Track the accumulated time that hasn't been simulated yet
+  delta += timestamp - lastFrameTimeMs; // note += here
+  lastFrameTimeMs = timestamp;
+
+  // Simulate the total elapsed time in fixed-size chunks
+  var numUpdateSteps = 0;
+  while (delta >= timestep) {
+      update(timestep);
+      delta -= timestep;
+      // Sanity check
+      if (++numUpdateSteps >= 240) {
+          panic(); // fix things
+          break; // bail out
+      }
+  }
+
+  function panic() {
+    delta = 0; // discard the unsimulated time
+    // ... snap the player to the authoritative state
+  }
+
+  render();
+  // frameID = requestAnimationFrame(game);
+  requestAnimationFrame(game);
+}
+
+function update(){
+
+  window.addEventListener("keydown", function(e) {
+    keys[e.keyCode] = true;
+  }, false);
+
+  window.addEventListener("keyup", function(e) {
+    delete keys[e.keyCode];
+  }, false);
+
+  // if (keys[80]) { stop(); }
+
+  // function Sound(obj) {
+  //   if (player.isColliding(obj)) { obj.playSound = true };
+  // }
+  // Sound(block[8]);
+    // if (player.isColliding(block[8])) {
+    // block[8].sound.Play();
+    // }
+
+  // Sound(block[8]);
+
+  if (player.isAlive==false){
+   alpha =  alpha - (decayRate);
+   if (alpha < -1.0){ alpha=-1;}
+ }
+  else{alpha=1;}
+
+  // respawn with space bar down, i would put this in a player init function
+  if (player.isAlive==false && keys[16] ==true) {
+     player.Y=0;
+
+     Y_VELOCITY=5;
+     X_VELOCITY=3;
+
+     player.isAlive=true;
+     player.isBobba=false;
+     decayRate=.01;
+
+  }
+
+  // kill player, immediately stop scrolling
+  if (player.isAlive==false)
+  {
+     player.velocityX=0;
+     player.velocityY=0;
+
+     X_VELOCITY = 0;
+     Y_VELOCITY = 0;
+  }
+
+  // player moving left or right
+  if (keys[37])  player.velocityX = -X_VELOCITY;
+  if (keys[39]) player.velocityX = X_VELOCITY;
+
+  // side scrolling blocks
+  for(var i=0;i<=maxBlock;i++) block[i].X += -player.velocityX;
+     player.Y += player.velocityY;
+
+  // side scrolling coins
+  for(var i=0;i<=maxCoin;i++) coin[i].X += -player.velocityX;
+
+  // stops player from moving
+  if (!keys[37] && !keys[39] && player.velocityY == 0) player.velocityX = 0;
+
+  // face left or right while standing
+  if (keys[37]) player.sprite.src="Images/luke-left.png";
+  if (keys[39]) player.sprite.src="Images/luke-right.png";
+
+  if (keys[32]) {
+    if (keys[39]) {
+                     player.sprite.src = "Images/luke-right-saber.png";
+                     sndSaberOn.play();
+                 }
+    else if (keys[37]) {
+                       player.sprite.src = "Images/luke-left-saber.png";
+                       sndSaberOn.play();
+                     }
+                }
+
+ if (keys[38]) {
+   if (keys[39]) {
+     player.sprite.src = "Images/luke-jump-right.png";
+   } else if (keys[37]) {
+     player.sprite.src = "Images/luke-jump-left.png";
+   }
+ }
+
+ for (var i=0; i<=maxBlock;i++) {
+   if (player.isColliding(block[i])) {
+     if (!keys[38] && !keys[32]) {
+       if (keys[39]) {
+         player.sprite.src = "Images/luke-right.png";
+       } else if (keys[37]) {
+         player.sprite.src = "Images/luke-left.png";
+       }
+     }
+   }
+ }
+
+ // if i'm jumping, i may want to have an isjumping STATE IN my player OBJECT...
+ // player jumping
+ if (player.velocityY < player.Gravity) player.velocityY += player.Weight;
+
+// player landing on block
+ for (var i=0; i<=maxBlock;i++) {
+   if (player.isColliding(block[i]) && player.Y + player.Height < block[i].Y + player.velocityY) {
+     player.Y = block[i].Y - player.Height;
+     player.velocityY = 0;
+   }
+ }
+
+ function touchedCoin() {
+   for (var i=0; i<=maxCoin;i++) {
+     if (player.isColliding(coin[i])) {
+       coin[i].sprite.src = "Images/blank.png";
+       player.score += 50;
+       if(coin[i].isAlive==true) { sndCoin.play(); } // it was playing over and over
+       coin[i].isAlive = false; // we need to manage the state of all game objects
+                                // when you're dealing with tons of objects you have to
+                                // optimize how you instantiate and destroy them
+     }
+   }
+ }
+
+ touchedCoin();
+
+ if (keys[38] && player.velocityY == 0) {
+   player.velocityY = -Y_VELOCITY;
+   sndJump.play();
+ }
+ // your block should have an attribute that tells you what sound to play
+ // when it's hit, that way you don't have to hardcode this stuff.
+ // your map file can say the block is a "character" block and that the
+ // character is image yoda, sound "yoda"
+ // then when you iterate through your game objects looking for collisions
+ // you can just call the play sound function when you see the block had
+ // that attribute and skip it if it didn't
+ if (player.isColliding(block[8])) sndR2D2.play();
+ if (player.isColliding(block[42])) sndYoda.play();
+ if (player.isColliding(block[37])) sndChewie.play();
+ if (player.isColliding(block[27])) sndC3P0.play();
+ if (player.isColliding(block[58])) sndHanSolo.play();
+
+ function isShooting(enemy,beam,speed,amount) {
+   if ((enemy.X - player.X) < 320 && (enemy.X - player.X) > 0) {
+     if (enemy.isShooting) {
+       sndBeam.play();
+       beam.X = enemy.X;
+       beam.Y = enemy.Y;
+       beam.X += -speed;
+       //console.log("BEAM!!!");
+      }
+      enemy.isShooting = false;
+   }
+ }
+ isShooting(block[57],beam,3);
+ isShooting(block[59],beam,3);
+
+ function killsEnemy(enemy) {
+     if (keys[32] && player.isColliding(enemy) && enemy.isAlive) {
+       enemy.sprite.src = "Images/blank.png";
+       player.score += 100;
+       if(enemy.isAlive==true) { sndDies.play(); }
+       enemy.isAlive = false;
+      }
+  }
+  killsEnemy(block[57]);
+  killsEnemy(block[59]);
+  killsEnemy(block[121]);
+
+// if (keys[32] && player.isColliding(block[57]) && block[57].isAlive) {
+//   sndDies.play();
+//   block[57].sprite.src = "Images/blank.png";
+//   block[57].isAlive = false;
+// }//block[57].sprite.src = "Images/8.png";
+
+function laserBeam(beam,speed,yoffset) {
+   beam.X += -speed;
+ //  beam.Y += yoffset;
+   // you could add a static or even random y value...trippy.//
+   if (beam.X <= -500) // if it's off screen far enough, start it again
+   {
+     beam.X = player.X + 500;   // put it 500 in front of the player
+     //beam.Y = player.Y;       // straight in their face, players will hate you
+     beam.Y = player.Y +( (50 + Math.random() *10) * DIRECTION );  // set the yaxis close to the player, at a random distance
+     if (beam.Y < 0) {beam.Y=0}; // don't let beam off screen, i hate dying to what i can't see
+   }
+ }
+
+laserBeam(beam, Math.random() *18 +1,Math.random() * 3+1 * DIRECTION);
+
+function isBombing(enemy,missile,speed,range1,range2) {
+  if (player.X > range1.X || player.X > range2.X) {
+    if (enemy.isBombing) {
+      enemy.X = 280;
+      missile.X == enemy.X;
+      missile.Y == enemy.Y + 32;
+      missile.Y = player.Y +( (50 + Math.random() *10) * DIRECTION );
+     }
+    //  enemy.isBombing = false;
+  }
+}
+isBombing(block[121],missile,3,block[91],block[125]);
+console.log("missile Y: " + missile.Y);
+
+  // function bobaFett(boba,range1,range2,missile,speed) {
+  //   if (player.X > range1.X || player.X > range2.X) {
+  //     boba.X = 280-3;
+  //     boba.isBombing = true;
+  //     missile.X = boba.X;
+  //     missile.Y = boba.Y + 32;
+  //     // missile.velocityY = 3;
+  //     missile.Y += speed;
+  //     //console.log("MOVE BOBA");
+  //   }
+  //    boba.isBombing = false;
+  // }
+  //  bobaFett(block[121],block[91],block[125],missile,3);
+
+
+  // function Bombing(boba,missile,speed) {
+  //   if (boba.isBombing) {
+  //
+  //   }
+  //   boba.isBombing = false;
+  // }
+  // Bombing(block[121],missile,3);
+  //console.log(missile.Y);
+
+ // PLAYER KILLED BY BEAM
+ if (player.isColliding(beam)) {
+   //player.sprite.src = "Images/8.png"; // better to draw an effect than to alter object, you'll have to reset the sprite on respawn
+   if(player.isAlive) {sndDies.play();}
+   player.isAlive=0; // kill player here...
+   player.isBoba=1;  // when killed by a beam, draw boba fett...
+   decayRate=.003;   // fade to black on death slower than falling off the screen so we see fett dance
+   player.HP -= 1;
+ }
+
+ // HE'S DEAD! by setting this state we can account for this in any function
+ if (player.Y >= 500 && player.Y <= 520) {
+   player.HP = 0;
+   if(player.isAlive) {sndDies.play();}
+   player.isAlive=0;
+   player.isBoba=false;
+   decayRate=.01; // no boba to look at, fade out faster
+ }
+
+ //console.log("boba X:" + block[121].X);
+ //console.log("first block: " + block[91].X);
+ //console.log("second block: " + block[125].X);
+ //console.log("X: " + player.X);
+ //console.log("Y: " + player.Y);
+ // console.log("velocityX: " + player.velocityX);
+ // console.log("velocityY: " + player.velocityY);
+
+}
+
+function render(){
+  grafx.clearRect(0,0,gameCanvas.width,gameCanvas.height);
+
+  grafx.fillStyle = "#c4c332";
+  grafx.fillText("HP " + player.HP,10,20);
+  grafx.fillText("Score " + player.score,55,20);
+
+  for (var i=0; i<=maxBlock;i++)
+      { grafx.drawImage(block[i].sprite,block[i].X,block[i].Y); }
+
+  // scale the coins...
+  SCALE = SCALE + DIRECTION;
+  if (SCALE < 10 || SCALE > 20){ DIRECTION = DIRECTION * -1;}
+
+  for (var i=0; i<=maxCoin; i++)
+      {
+        if(coin[i].isAlive == true) {grafx.drawImage( coin[i].sprite, coin[i].X, coin[i].Y,SCALE,20); } // added height/width...
+  }
+  grafx.drawImage(beam.sprite,beam.X,beam.Y);
+  grafx.drawImage(missile.sprite,missile.X,missile.Y);
+
+  grafx.globalAlpha = alpha; // fade in/out this much
+
+  if (player.isAlive==false && player.isBoba)
+  {
+    grafx.drawImage(boba.sprite,120,60-(SCALE*3),400,400);
+  }
+
+  if (player.isAlive==true) { grafx.drawImage(player.sprite,player.X,player.Y);}
+}
+
+/*
+     getKeyState(); // i do this first because input from the user may need to be accessed by the menu, game over, running state whatever
+
+     if (gamestate=="MENU")
+        renderMenu();
+     if (gamestate=="INIT")
+        doInit();
+     if (gamestate=="GAMEOVER")
+        doGameOver();
+     if (gamestate=="RUNNING")
+        doGameLoop();
+
+    // from my game loop i would call other functions like :
+        checkCollions();
+        renderWorld();
+        movePlayer();
+
+	// this isn't the best example of a game loop...there's a lot of info online and you should look at other people's source to see how they structure it
+
+*/
+
+requestAnimationFrame(game);
+
+
+function Object(img,x,y,width,height,sound) {
+  this.sprite = new Image();
+  this.sprite.src = img;
+  this.X = x;
+  this.Y = y;
+  this.Width = width;
+  this.Height = height;
+  // this.sound = new Audio();
+  // this.sound.src = sound;
+  this.previousX;
+  this.previousY;
+  this.velocityX = 0;
+  this.velocityY = 0;
+  this.Gravity = 0;
+  this.Weight = 0;
+  this.HP = 100;
+  this.score = 0;
+  this.isJumping = false;
+  this.isAlive = true;
+  this.isSpawning = false;
+  this.isBoba = false;
+  this.isShooting = true;
+  this.playSound = false;
+  this.isBombing = true;
+
+  this.isColliding = function(obj) {
+    if (this.X > obj.X + obj.Width) return false;
+    if (this.X + this.Width < obj.X) return false;
+    if (this.Y > obj.Y + obj.Height) return false;
+    if (this.Y + this.Height < obj.Y) return false;
+    return true;
+  }
+}
+
+</script>
