@@ -8,10 +8,22 @@ var gameCanvas = document.getElementById("graphics");
 var grafx = gameCanvas.getContext('2d');
 
 var player = new Object("Images/luke-right.png",280,200,24,41);
-var beam = new Object("Images/beam.png",2400,200-41,32,3);
 var boba = new Object("Images/boba.png",2400,200-41,32,3); //dancing image when hit by beam
-var missile = new Object("Images/8.png",6500,50,3,32);
 
+// var maxBeams = 20;
+// var beam = new Array();
+// for (var i = 0; i <= 20; i++) {
+//   beam[i] = new Object("Images/beam.png",2400,200-41,32,3);
+// }
+var beam = new Object("Images/beam.png",2400,200-41,32,3);
+
+// var maxMissiles = 20;
+// var missile = new Array();
+// for (var i = 0; i <= 20; i++) {
+//   missile[i] = new Object("Images/8.png",280,50,3,32);
+// }
+
+var missile = new Object("Images/missile.png",6500,50,3,32);
 
 
 var alpha  = 1;     // alpha channel to fade out when we're dead
@@ -40,6 +52,7 @@ var sndSaberOn = new Audio("Audio/light-saber-on.mp3");
 var sndCoin = new Audio("Audio/coin.wav");
 var sndDies = new Audio("Audio/luke_dies.wav");
 var sndBeam = new Audio("Audio/blaster-firing.mp3");
+var sndExplode = new Audio("Audio/explosion.wav");
 var sndR2D2 = new Audio("Audio/R2D2-yeah.mp3");
 var sndYoda = new Audio("Audio/Yoda_no_try.mp3");
 var sndChewie = new Audio("Audio/Chewbacca_roar.mp3");
@@ -98,9 +111,9 @@ for (var i=28; i<=30;i++) {
 for (var i=51; i<=56;i++) {
   block[i] = new Object("Images/block4.png",i*32+2700,200,32,32);
 }
-  block[57] = new Object("Images/Storm-front.png",3180,300-41,32,41); //storm trooper 1
+  block[57] = new Object("Images/storm-shooting-left.png",3180,300-41,32,41); //storm trooper 1
   block[58] = new Object("Images/HanSolo-front.png",i*32+2590,200-41,20,41); //Han Solo
-  block[59] = new Object("Images/Storm-front.png",4200,190-41,32,41); //storm trooper 2
+  block[59] = new Object("Images/storm-shooting-left.png",4200,190-41,32,41); //storm trooper 2
   block[60] = new Object("Images/block3.png",4200,190,32,32); //storm trooper 2 block
   block[61] = new Object("Images/block3.png",4200-32,190,32,32);
 
@@ -267,6 +280,7 @@ function update(){
   // player moving left or right
   if (keys[37])  player.velocityX = -X_VELOCITY;
   if (keys[39]) player.velocityX = X_VELOCITY;
+  // if (keys[40]) player.sprite.src = "Images/luke-ducking.png";
 
   // side scrolling blocks
   for(var i=0;i<=maxBlock;i++) block[i].X += -player.velocityX;
@@ -348,6 +362,9 @@ function update(){
  if (player.isColliding(block[27])) sndC3P0.play();
  if (player.isColliding(block[58])) sndHanSolo.play();
 
+
+
+
  function isShooting(enemy,beam,speed,amount) {
    if ((enemy.X - player.X) < 320 && (enemy.X - player.X) > 0) {
      if (enemy.isShooting) {
@@ -393,21 +410,37 @@ function laserBeam(beam,speed,yoffset) {
    }
  }
 
-laserBeam(beam, Math.random() *18 +1,Math.random() * 3+1 * DIRECTION);
+laserBeam(beam, Math.random() *18 +1, Math.random() * 3+1 * DIRECTION);
+
+
+
+// for (var i=0; i <= maxMissiles; i++) {
+//
+//   missile[i].Y += 3;
+// }
+
 
 function isBombing(enemy,missile,speed,range1,range2) {
   if (player.X > range1.X || player.X > range2.X) {
-    if (enemy.isBombing) {
-      enemy.X = 280;
-      missile.X == enemy.X;
-      missile.Y == enemy.Y + 32;
-      missile.Y = player.Y +( (50 + Math.random() *10) * DIRECTION );
-     }
-    //  enemy.isBombing = false;
+    enemy.X = 280;
+    missile.X = 280;
+    // missile.Y = 50;
+    if (enemy.isAlive) {
+      missile.Y += speed;
+
+      for (var i=0; i <= maxBlock; i++) {
+        if (missile.isColliding(block[i])) {
+          missile.Y = block[i].Y - 32;
+          missile.sprite.src = "Images/explosion.png";
+          sndExplode.play();
+        }
+      }
+    }
   }
 }
-isBombing(block[121],missile,3,block[91],block[125]);
+isBombing(block[121],missile,5,block[91],block[125]);
 console.log("missile Y: " + missile.Y);
+
 
   // function bobaFett(boba,range1,range2,missile,speed) {
   //   if (player.X > range1.X || player.X > range2.X) {
@@ -478,10 +511,19 @@ function render(){
 
   for (var i=0; i<=maxCoin; i++)
       {
-        if(coin[i].isAlive == true) {grafx.drawImage( coin[i].sprite, coin[i].X, coin[i].Y,SCALE,20); } // added height/width...
+        if(coin[i].isAlive == true) {grafx.drawImage( coin[i].sprite, coin[i].X, coin[i].Y,SCALE,20); }
   }
+
   grafx.drawImage(beam.sprite,beam.X,beam.Y);
+  // for (var i=0; i<=maxBeams;i++) {
+  //   grafx.drawImage(beam[i].sprite,beam[i].X,beam[i].Y);
+  // }
+
+  // for (var i=0; i<=maxMissiles;i++) {
+  //   grafx.drawImage(missile[i].sprite,missile[i].X,missile[i].Y);
+  // }
   grafx.drawImage(missile.sprite,missile.X,missile.Y);
+
 
   grafx.globalAlpha = alpha; // fade in/out this much
 
