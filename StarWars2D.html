@@ -9,21 +9,21 @@ var grafx = gameCanvas.getContext('2d');
 
 var player = new Object("Images/luke-right.png",280,200,24,41);
 var boba = new Object("Images/boba.png",2400,200-41,32,3); //dancing image when hit by beam
+var beam = new Object("Images/beam.png",2400,200-41,32,3);
+var missile = new Object("Images/missile.png",6500,50,3,32);
 
 // var maxBeams = 20;
 // var beam = new Array();
 // for (var i = 0; i <= 20; i++) {
 //   beam[i] = new Object("Images/beam.png",2400,200-41,32,3);
 // }
-var beam = new Object("Images/beam.png",2400,200-41,32,3);
+
 
 // var maxMissiles = 20;
 // var missile = new Array();
 // for (var i = 0; i <= 20; i++) {
 //   missile[i] = new Object("Images/8.png",280,50,3,32);
 // }
-
-var missile = new Object("Images/missile.png",6500,50,3,32);
 
 
 var alpha  = 1;     // alpha channel to fade out when we're dead
@@ -58,12 +58,9 @@ var sndYoda = new Audio("Audio/Yoda_no_try.mp3");
 var sndChewie = new Audio("Audio/Chewbacca_roar.mp3");
 var sndC3P0 = new Audio("Audio/c3p0_against_my_programming.mp3");
 var sndHanSolo = new Audio("Audio/HanSolo_that_bad_huh.mp3");
+var sndHealth = new Audio("Audio/health.wav");
 
 
-
-
-// var myMap = JSON.parse(mapLevels);
-//   console.log(myMap.x);
 
 var maxBlock = 125;
 var block = new Array();
@@ -161,9 +158,16 @@ for (var i=51; i<=56;i++) {
 
   randomCoins(0,"Images/coin.png",20,300,8000,5,5);
 
+  var maxHealth = 5;
+  var health = new Array();
+  function randomHealth (start, img, number, rangeX1, rangeX2, width, height) {
+    for (var i=start; i <= number; i++) {
+      health[i] = new Object(img,Math.floor(Math.random()*(rangeX2-rangeX1+1)+rangeX1),
+                                Math.floor(Math.random()*(300-70+1)+70),width,height);
+    }
+  }
 
-
-
+  randomHealth(0,"Images/health.png",5,300,8000,5,5);
 
 
 var lastFrameTimeMs = 0; // The last time the loop was run
@@ -289,6 +293,9 @@ function update(){
   // side scrolling coins
   for(var i=0;i<=maxCoin;i++) coin[i].X += -player.velocityX;
 
+  // side scrolling health
+  for(var i=0;i<=maxHealth;i++) health[i].X += -player.velocityX;
+
   // stops player from moving
   if (!keys[37] && !keys[39] && player.velocityY == 0) player.velocityX = 0;
 
@@ -350,6 +357,19 @@ function update(){
  }
 
  touchedCoin();
+
+ function touchedHealth() {
+   for (var i=0; i<=maxHealth;i++) {
+     if (player.isColliding(health[i])) {
+       health[i].sprite.src = "Images/blank.png";
+       player.HP += 50;
+       if(health[i].isAlive==true) { sndHealth.play(); }
+       health[i].isAlive = false;
+     }
+   }
+ }
+
+ touchedHealth();
 
  if (keys[38] && player.velocityY == 0) {
    player.velocityY = -Y_VELOCITY;
@@ -430,15 +450,21 @@ function isBombing(enemy,missile,speed,range1,range2) {
 
       for (var i=0; i <= maxBlock; i++) {
         if (missile.isColliding(block[i])) {
-          missile.Y = block[i].Y - 32;
+          missile.Y = block[i].Y - 34;
           missile.sprite.src = "Images/explosion.png";
-          sndExplode.play();
+          if(missile.isAlive==true) { sndExplode.play(); }
+          missile.isAlive = false;
         }
+      }
+
+      if (player.isColliding(missile)) {
+        player.HP -= 20;
       }
     }
   }
 }
 isBombing(block[121],missile,5,block[91],block[125]);
+
 console.log("missile Y: " + missile.Y);
 
 
@@ -512,6 +538,11 @@ function render(){
   for (var i=0; i<=maxCoin; i++)
       {
         if(coin[i].isAlive == true) {grafx.drawImage( coin[i].sprite, coin[i].X, coin[i].Y,SCALE,20); }
+  }
+
+  for (var i=0; i<=maxHealth; i++)
+      {
+        if(health[i].isAlive == true) {grafx.drawImage( health[i].sprite, health[i].X, health[i].Y,SCALE,20); }
   }
 
   grafx.drawImage(beam.sprite,beam.X,beam.Y);
