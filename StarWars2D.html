@@ -9,26 +9,34 @@ var grafx = gameCanvas.getContext('2d');
 
 var player = new Object("Images/luke-right.png",280,200,24,41);
 var boba = new Object("Images/boba.png",2400,200-41,32,3); //dancing image when hit by beam
-var beam = new Object("Images/beam.png",2400,200-41,32,3);
-var missile = new Object("Images/missile.png",6500,50,3,32);
 
 // var maxBeams = 20;
 // var beam = new Array();
 // for (var i = 0; i <= 20; i++) {
 //   beam[i] = new Object("Images/beam.png",2400,200-41,32,3);
 // }
+var beam = new Object("Images/beam.png",2400,200-41,32,3);
 
 
-// var maxMissiles = 20;
-// var missile = new Array();
-// for (var i = 0; i <= 20; i++) {
-//   missile[i] = new Object("Images/8.png",280,50,3,32);
-// }
+var missile = new Object("Images/missile.png",6500,50,3,32);
+
+var bossmissiles = new Array();
+
+for (var i=0;i < 20;i++) {
+
+    bossmissiles[i] = new Object("Images/missile.png",0,0,3,32);
+    bossmissiles[i].isAlive = false;
+    bossmissiles[i].Y_VELOCITY = 0;
+
+  }
 
 
-var alpha  = 1;     // alpha channel to fade out when we're dead
-var decayRate=.01;  // fades out slower if boba fett kills us
-var SCALE  = 20;    // used to make the coins change size
+var BOSS_FIGHT = false; // advance to fett fight
+var BOSS_STAGE = 0;     // multi-stage fight so we can progress / do different stuff
+
+var alpha  = 1;         // alpha channel to fade out when we're dead
+var decayRate=.01;      // fades out slower if boba fett kills us
+var SCALE  = 20;        // used to make the coins change size
 var DIRECTION = 1;
 
 var X_VELOCITY = 3;
@@ -36,7 +44,7 @@ var Y_VELOCITY = 5;
 
 player.Gravity = 20;
 player.Weight = 0.1;
-
+//player.X = 2048;
 /*  up: 38  left: 37  right: 39  space: 32 */
 
 var keys = [];
@@ -59,11 +67,14 @@ var sndChewie = new Audio("Audio/Chewbacca_roar.mp3");
 var sndC3P0 = new Audio("Audio/c3p0_against_my_programming.mp3");
 var sndHanSolo = new Audio("Audio/HanSolo_that_bad_huh.mp3");
 var sndHealth = new Audio("Audio/health.wav");
+var sndJawa = new Audio("Audio/jawa.mp3");
+var sndTusken = new Audio("Audio/Tusken-Raider-Yell.mp3");
+var sndJabba = new Audio("Audio/jabba_laugh.wav");
 
-
-
-var maxBlock = 125;
+var maxBlock = 242;
 var block = new Array();
+
+//load block data
 for (var i=0; i<=5;i++) {
   block[i] = new Object("Images/block.png",i*32+280,300,32,32);
 }
@@ -114,8 +125,15 @@ for (var i=51; i<=56;i++) {
   block[60] = new Object("Images/block3.png",4200,190,32,32); //storm trooper 2 block
   block[61] = new Object("Images/block3.png",4200-32,190,32,32);
 
-  block[121] = new Object("Images/boba_fett.png",6500,50-41,20,41); //boba fett enemy
+  block[121] = new Object("Images/boba_fett.png",6500,50-41,20,41,'true'); //boba fett enemy
   block[125] = new Object("Images/blank.png",6820,350,32,32); // range 2 boba fett battle
+
+  block[126] = new Object("Images/Jawa-front.png",5000,200,32,34); //jawa
+  block[127] = new Object("Images/asteroid2.png",5000,200+28,32,32); //jawa block
+  block[128] = new Object("Images/Tusken-Raider-Front.png",6000,200,32,41); //tusken raider
+  block[129] = new Object("Images/asteroid2.png",6000,200+36,32,32); // tusken raider block
+
+  block[242] = new Object("Images/jabba the hutt sprite.png",8600,280-40,20,-20); // jabba the hutt
 
   for (var i=91; i<=110;i++) {
     block[i] = new Object("Images/block5.png",i*32+3300,350,32,32); //boba fett battle square level 1
@@ -137,6 +155,11 @@ for (var i=51; i<=56;i++) {
   }
 
 
+  for (var i=231; i<=241;i++) {
+    block[i] = new Object("Images/gold_block.png",i*32+1050,280,32,32); //jabba the hutt platform
+  }
+
+
   function randomBlocks(start, img, number, rangeX1, rangeX2) {
     for (var i=start; i <= number; i++) {
       block[i] = new Object(img,Math.floor(Math.random()*(rangeX2-rangeX1+1)+rangeX1),
@@ -147,7 +170,11 @@ for (var i=51; i<=56;i++) {
   randomBlocks(62,"Images/asteroid.png",78,4600,6000);
   randomBlocks(79,"Images/asteroid2.png",90,4800,6200);
 
-  var maxCoin = 20;
+  randomBlocks(130,"Images/gold_block.png",230,6900,8200);
+
+
+
+  var maxCoin = 130;
   var coin = new Array();
   function randomCoins(start, img, number, rangeX1, rangeX2, width, height) {
     for (var i=start; i <= number; i++) {
@@ -156,9 +183,10 @@ for (var i=51; i<=56;i++) {
     }
   }
 
-  randomCoins(0,"Images/coin.png",20,300,8000,5,5);
+  randomCoins(0,"Images/coin.png",20,300,8000,1,1);
+  randomCoins(21,"Images/coin.png",130,6900,8700,1,1);
 
-  var maxHealth = 5;
+  var maxHealth = 20;
   var health = new Array();
   function randomHealth (start, img, number, rangeX1, rangeX2, width, height) {
     for (var i=start; i <= number; i++) {
@@ -167,7 +195,9 @@ for (var i=51; i<=56;i++) {
     }
   }
 
-  randomHealth(0,"Images/health.png",5,300,8000,5,5);
+  randomHealth(0,"Images/health.png",5,300,10000,5,5);
+  randomHealth(6,"Images/health.png",20,6900,8000,5,5);
+
 
 
 var lastFrameTimeMs = 0; // The last time the loop was run
@@ -179,29 +209,29 @@ var timestep = 1000 / 60;
 var running = false,
     started = false;
 
-function stop() {
-    running = false;
-    started = false;
-    cancelAnimationFrame(frameID);
-}
+// function stop() {
+//     running = false;
+//     started = false;
+//     cancelAnimationFrame(frameID);
+// }
 
-function start() {
-    if (!started) { // don't request multiple frames
-        started = true;
-        // Dummy frame to get our timestamps and initial drawing right.
-        // Track the frame ID so we can cancel it if we stop quickly.
-        frameID = requestAnimationFrame(function(timestamp) {
-            render(1); // initial render
-            running = true;
-            // reset some time tracking variables
-            lastFrameTimeMs = timestamp;
-            lastFpsUpdate = timestamp;
-            framesThisSecond = 0;
-            // actually start the game loop
-            frameID = requestAnimationFrame(game);
-        });
-    }
-}
+// function start() {
+//     if (!started) { // don't request multiple frames
+//         started = true;
+//         // Dummy frame to get our timestamps and initial drawing right.
+//         // Track the frame ID so we can cancel it if we stop quickly.
+//         frameID = requestAnimationFrame(function(timestamp) {
+//             render(1); // initial render
+//             running = true;
+//             // reset some time tracking variables
+//             lastFrameTimeMs = timestamp;
+//             lastFpsUpdate = timestamp;
+//             framesThisSecond = 0;
+//             // actually start the game loop
+//             frameID = requestAnimationFrame(game);
+//         });
+//     }
+// }
 
 function game(timestamp){
   // Track the accumulated time that hasn't been simulated yet
@@ -226,6 +256,7 @@ function game(timestamp){
   }
 
   render();
+
   // frameID = requestAnimationFrame(game);
   requestAnimationFrame(game);
 }
@@ -240,18 +271,7 @@ function update(){
     delete keys[e.keyCode];
   }, false);
 
-  // if (keys[80]) { stop(); }
-
-  // function Sound(obj) {
-  //   if (player.isColliding(obj)) { obj.playSound = true };
-  // }
-  // Sound(block[8]);
-    // if (player.isColliding(block[8])) {
-    // block[8].sound.Play();
-    // }
-
-  // Sound(block[8]);
-
+  //fade out / dead
   if (player.isAlive==false){
    alpha =  alpha - (decayRate);
    if (alpha < -1.0){ alpha=-1;}
@@ -282,19 +302,28 @@ function update(){
   }
 
   // player moving left or right
-  if (keys[37])  player.velocityX = -X_VELOCITY;
+  if (keys[37]) player.velocityX = -X_VELOCITY;
   if (keys[39]) player.velocityX = X_VELOCITY;
-  // if (keys[40]) player.sprite.src = "Images/luke-ducking.png";
 
-  // side scrolling blocks
-  for(var i=0;i<=maxBlock;i++) block[i].X += -player.velocityX;
-     player.Y += player.velocityY;
+  // only scroll if it's not a boss fight
+  if (BOSS_FIGHT == false) {
 
-  // side scrolling coins
-  for(var i=0;i<=maxCoin;i++) coin[i].X += -player.velocityX;
+     // side scrolling blocks
+     for(var i=0;i<=maxBlock;i++) block[i].X += -player.velocityX;
+        player.Y += player.velocityY;
 
-  // side scrolling health
-  for(var i=0;i<=maxHealth;i++) health[i].X += -player.velocityX;
+     // side scrolling coins
+     for(var i=0;i<=maxCoin;i++) coin[i].X += -player.velocityX;
+
+     // side scrolling health
+     for(var i=0;i<=maxHealth;i++) health[i].X += -player.velocityX;
+
+  }
+
+  if (BOSS_FIGHT == true){
+
+     BattleBoss(block[121]); // block 121 is boba fett boss
+  }
 
   // stops player from moving
   if (!keys[37] && !keys[39] && player.velocityY == 0) player.velocityX = 0;
@@ -333,6 +362,7 @@ function update(){
      }
    }
  }
+
 
  // player jumping
  if (player.velocityY < player.Gravity) player.velocityY += player.Weight;
@@ -381,9 +411,9 @@ function update(){
  if (player.isColliding(block[37])) sndChewie.play();
  if (player.isColliding(block[27])) sndC3P0.play();
  if (player.isColliding(block[58])) sndHanSolo.play();
-
-
-
+ if (player.isColliding(block[126])) sndJawa.play();
+ if (player.isColliding(block[128])) sndTusken.play();
+ if (player.isColliding(block[242])) sndJabba.play();
 
  function isShooting(enemy,beam,speed,amount) {
    if ((enemy.X - player.X) < 320 && (enemy.X - player.X) > 0) {
@@ -397,6 +427,7 @@ function update(){
       enemy.isShooting = false;
    }
  }
+
  isShooting(block[57],beam,3);
  isShooting(block[59],beam,3);
 
@@ -412,12 +443,6 @@ function update(){
   killsEnemy(block[59]);
   killsEnemy(block[121]);
 
-// if (keys[32] && player.isColliding(block[57]) && block[57].isAlive) {
-//   sndDies.play();
-//   block[57].sprite.src = "Images/blank.png";
-//   block[57].isAlive = false;
-// }//block[57].sprite.src = "Images/8.png";
-
 function laserBeam(beam,speed,yoffset) {
    beam.X += -speed;
  //  beam.Y += yoffset;
@@ -429,68 +454,16 @@ function laserBeam(beam,speed,yoffset) {
      if (beam.Y < 0) {beam.Y=0}; // don't let beam off screen
    }
  }
-
+// if not boss_fight...
 laserBeam(beam, Math.random() *18 +1, Math.random() * 3+1 * DIRECTION);
 
 
 
-// for (var i=0; i <= maxMissiles; i++) {
-//
-//   missile[i].Y += 3;
-// }
-
-
-function isBombing(enemy,missile,speed,range1,range2) {
-  if (player.X > range1.X || player.X > range2.X) {
-    enemy.X = 280;
-    missile.X = 280;
-    // missile.Y = 50;
-    if (enemy.isAlive) {
-      missile.Y += speed;
-
-      for (var i=0; i <= maxBlock; i++) {
-        if (missile.isColliding(block[i])) {
-          missile.Y = block[i].Y - 34;
-          missile.sprite.src = "Images/explosion.png";
-          if(missile.isAlive==true) { sndExplode.play(); }
-          missile.isAlive = false;
-        }
-      }
-
-      if (player.isColliding(missile)) {
-        player.HP -= 20;
-      }
-    }
-  }
+// check for boss fight, it will happen if player walks past fett
+if (block[121].isAlive && BOSS_FIGHT == false && player.X >= block[121].X) {
+   BOSS_FIGHT = true;
 }
-isBombing(block[121],missile,5,block[91],block[125]);
 
-console.log("missile Y: " + missile.Y);
-
-
-  // function bobaFett(boba,range1,range2,missile,speed) {
-  //   if (player.X > range1.X || player.X > range2.X) {
-  //     boba.X = 280-3;
-  //     boba.isBombing = true;
-  //     missile.X = boba.X;
-  //     missile.Y = boba.Y + 32;
-  //     // missile.velocityY = 3;
-  //     missile.Y += speed;
-  //     //console.log("MOVE BOBA");
-  //   }
-  //    boba.isBombing = false;
-  // }
-  //  bobaFett(block[121],block[91],block[125],missile,3);
-
-
-  // function Bombing(boba,missile,speed) {
-  //   if (boba.isBombing) {
-  //
-  //   }
-  //   boba.isBombing = false;
-  // }
-  // Bombing(block[121],missile,3);
-  //console.log(missile.Y);
 
  // PLAYER KILLED BY BEAM
  if (player.isColliding(beam)) {
@@ -510,14 +483,6 @@ console.log("missile Y: " + missile.Y);
    player.isBoba=false;
    decayRate=.01; // no boba to look at, fade out faster
  }
-
- //console.log("boba X:" + block[121].X);
- //console.log("first block: " + block[91].X);
- //console.log("second block: " + block[125].X);
- //console.log("X: " + player.X);
- //console.log("Y: " + player.Y);
- // console.log("velocityX: " + player.velocityX);
- // console.log("velocityY: " + player.velocityY);
 
 }
 
@@ -546,28 +511,54 @@ function render(){
   }
 
   grafx.drawImage(beam.sprite,beam.X,beam.Y);
-  // for (var i=0; i<=maxBeams;i++) {
-  //   grafx.drawImage(beam[i].sprite,beam[i].X,beam[i].Y);
-  // }
-
-  // for (var i=0; i<=maxMissiles;i++) {
-  //   grafx.drawImage(missile[i].sprite,missile[i].X,missile[i].Y);
-  // }
-  grafx.drawImage(missile.sprite,missile.X,missile.Y);
-
 
   grafx.globalAlpha = alpha; // fade in/out this much
 
+  //draw big fett?
   if (player.isAlive==false && player.isBoba)
   {
     grafx.drawImage(boba.sprite,120,60-(SCALE*3),400,400);
   }
 
+  // draw player?
   if (player.isAlive==true) { grafx.drawImage(player.sprite,player.X,player.Y);}
+
+
+
+  //if fett is alive and has missiles, draw the missles that are alive then check for player collision
+  if(player.isAlive == true && BOSS_FIGHT==true && block[121].isAlive)
+  {
+     for (var i=0;i < bossmissiles.length;i++)
+     {
+        if (bossmissiles[i].isAlive==true)
+        {
+            grafx.drawImage(bossmissiles[i].sprite,bossmissiles[i].X,bossmissiles[i].Y);
+            //should set up an array of explosions with time to live counter.
+
+            for (var j=0; j<=maxBlock; j++){
+            if (bossmissiles[i].isColliding(block[j])) {
+                  bossmissiles[i].isAlive=false;
+                  missile.sprite.src = "Images/explosion.png";
+                  sndExplode.play();
+                  grafx.drawImage(missile.sprite,bossmissiles[i].X,bossmissiles[i].Y)
+               }
+             }
+
+            if (bossmissiles[i].isColliding(player)) {
+                  bossmissiles[i].isAlive=false;
+                  missile.sprite.src = "Images/explosion.png";
+                  sndExplode.play();
+                  grafx.drawImage(missile.sprite,bossmissiles[i].X,bossmissiles[i].Y)
+               }
+
+        }
+      }
+
+  }
+
 }
 
 requestAnimationFrame(game);
-
 
 function Object(img,x,y,width,height,sound) {
   this.sprite = new Image();
@@ -594,6 +585,10 @@ function Object(img,x,y,width,height,sound) {
   this.playSound = false;
   this.isBombing = true;
 
+  // for boss fight...
+  this.attackCounter  = 0;
+  this.missiles = new Array();
+
   this.isColliding = function(obj) {
     if (this.X > obj.X + obj.Width) return false;
     if (this.X + this.Width < obj.X) return false;
@@ -603,4 +598,192 @@ function Object(img,x,y,width,height,sound) {
   }
 }
 
+function BattleBoss(boss) {
+
+  // STAGE 0  : SHAKE
+  if (BOSS_STAGE ==0)
+  {
+
+     var rndx = Math.random()+.007;
+     var rndy = Math.random();
+
+     if (Math.random() > .5) {rndx *= -1; }
+     if (Math.random() > .5) {rndy *= -1; }
+
+     boss.attackCounter = boss.attackCounter + 1;
+
+     boss.X = boss.X + rndx;
+     boss.Y = boss.Y + rndy;
+
+     if (boss.Y < 0) {boss.Y=0};
+     if (boss.Y > 256) {boss.Y=256};
+
+     if (boss.attackCounter >= 100 && BOSS_STAGE ==0) {
+         BOSS_STAGE = 1;
+     }
+  }
+
+  // STAGES : get faster over time, drop more missisles
+  if (BOSS_STAGE >=1) {
+
+    boss.attackCounter = boss.attackCounter + 1;
+
+     var trackingSpeed=2;
+     var numMissiles=1;
+
+     switch (BOSS_STAGE)
+     {
+        case 0 :
+           numMissles    =0;
+           trackingSpeed =0;
+        case 1 :
+           trackingSpeed = 1.5;
+           numMissiles   = 2;
+           break;
+        case 2 :
+           trackingSpeed = 2.9;
+           numMissiles    = 4;
+           break;
+        case 3 :
+           trackingSpeed = 5;
+           numMissiles  = 6;
+        case 4 :
+           trackingSpeed = 5;
+           numMissiles  = 8;
+           break;
+        case 5 :
+           trackingSpeed = 0;
+           numMissiles  = 12;
+           break;
+     }
+
+     // fett tracks player and creeps down
+     if (BOSS_STAGE==1)
+     {
+        if (boss.Y < 100){
+           boss.Y = boss.Y + Math.random()*2;}
+
+        if (boss.X > player.X){
+           boss.X = boss.X - trackingSpeed;}
+
+        if( boss.X < player.X){
+           boss.X = boss.X + trackingSpeed;}
+     }
+
+     // fett runs away
+     if (BOSS_STAGE==2)
+     {
+        if (boss.X > player.X){
+           boss.X = boss.X + trackingSpeed;}
+
+        if( boss.X < player.X){
+           boss.X = boss.X - trackingSpeed;}
+
+        boss.attackCounter = boss.attackCounter+5; // expire this state quickly
+     }
+
+     // fett tracks the player
+     if (BOSS_STAGE==3)
+     {
+        if (boss.X > player.X){
+           boss.X = boss.X - trackingSpeed;}
+
+        if( boss.X < player.X){
+           boss.X = boss.X + trackingSpeed;}
+     }
+
+     // fett tracks player and creeps up
+     if (BOSS_STAGE==4)
+     {
+        if (boss.Y >32){
+           boss.Y = boss.Y - Math.random()*2;}
+
+        if (boss.X > player.X){
+           boss.X = boss.X - trackingSpeed;}
+
+        if( boss.X < player.X){
+           boss.X = boss.X + trackingSpeed;}
+     }
+
+     // fett apeshit
+     if (BOSS_STAGE==5)
+     {
+        if(boss.X<=0 || boss.X_VELOCITY ==0) {boss.X_VELOCITY=Math.random()*10+1;}
+        if(boss.X>=grafx.canvas.width-32) { boss.X_VELOCITY *= -1;}
+
+        boss.X = boss.X + X_VELOCITY;
+        if (boss.X >= grafx.canvas.width-32) { boss.X = 0;}
+     }
+
+     // did fett walk off screen?
+     if (boss.X <= 0) {boss.X=0;}
+     if (boss.X >= grafx.canvas.width) { boss.X = grafx.canvas.width;}
+
+     // launch a missile
+     var shoot = Math.random()*100+1;
+
+     if (shoot >=98-BOSS_STAGE) //this loop didn't work as expected...
+     {
+
+        for(var j=0;j <numMissiles; j++) {
+           if(bossmissiles[j].isAlive == false)
+           {
+               bossmissiles[j].isAlive = true;
+               bossmissiles[j].Y_VELOCITY = Math.random()*4+1;
+
+               bossmissiles[j].X = boss.X;
+               bossmissiles[j].Y = boss.Y+40;
+
+               if(BOSS_STAGE==1) {
+                bossmissiles[j].sprite.src ="Images/coin.png";
+               }
+             break;
+           }
+        }
+     }
+
+     // move missles and expire them if they go past the player...
+     for(var j=0;j < bossmissiles.length; j ++)
+     {
+        if(bossmissiles[j].isAlive == true)
+        {
+             bossmissiles[j].Y = bossmissiles[j].Y + bossmissiles[j].Y_VELOCITY;
+        }
+        if (bossmissiles[j].Y >= grafx.canvas.height) {
+           bossmissiles[j].isAlive = false;
+        }
+     }
+
+     // increment the boss battle stage
+     // he gets progressively faster/drops more bombs then starts over
+     if (boss.attackCounter > 300){
+
+        boss.attackCounter = 0;
+
+        BOSS_STAGE = BOSS_STAGE + 1;
+
+        if (BOSS_STAGE > 5) {
+           BOSS_STAGE = 1};
+
+     }
+  }
+
+  // move the player now, not the blocks and bind the player to the battle field (screen)
+  player.X += player.velocityX;
+  player.Y += player.velocityY;
+
+  if (player.X < 0) { player.X = 0;}
+  if (player.X > grafx.canvas.width-32){ player.X = grafx.canvas.width-32;}
+
+  // end boss fight
+  if (keys[32] && player.isColliding(block[121]) && block[121].isAlive) {
+    block[121].sprite.src = "Images/blank.png";
+    player.score += 1000;
+    if(block[121].isAlive==true) { sndDies.play(); }
+    block[121].isAlive = false;
+    player.X = 280;
+    BOSS_FIGHT = false;
+   }
+
+}
 </script>
