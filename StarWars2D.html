@@ -31,8 +31,8 @@ for (var i=0;i < 20;i++) {
   }
 
 
-var BOSS_FIGHT = false; // advance to fett fight
-var BOSS_STAGE = 0;     // multi-stage fight so we can progress / do different stuff
+var BOBA_FIGHT = false; // advance to fett fight
+var BOBA_BOSS_STAGE = 0;     // multi-stage fight so we can progress / do different stuff
 
 var alpha  = 1;         // alpha channel to fade out when we're dead
 var decayRate=.01;      // fades out slower if boba fett kills us
@@ -71,7 +71,7 @@ var sndJawa = new Audio("Audio/jawa.mp3");
 var sndTusken = new Audio("Audio/Tusken-Raider-Yell.mp3");
 var sndJabba = new Audio("Audio/jabba_laugh.wav");
 
-var maxBlock = 242;
+var maxBlock = 247;
 var block = new Array();
 
 //load block data
@@ -133,7 +133,8 @@ for (var i=51; i<=56;i++) {
   block[128] = new Object("Images/Tusken-Raider-Front.png",6000,200,32,41); //tusken raider
   block[129] = new Object("Images/asteroid2.png",6000,200+36,32,32); // tusken raider block
 
-  block[242] = new Object("Images/jabba the hutt sprite.png",8600,280-40,20,-20); // jabba the hutt
+  block[242] = new Object("Images/Jabba_the_Hutt.png",8580,215,20,0); // jabba the hutt
+
 
   for (var i=91; i<=110;i++) {
     block[i] = new Object("Images/block5.png",i*32+3300,350,32,32); //boba fett battle square level 1
@@ -154,10 +155,17 @@ for (var i=51; i<=56;i++) {
     block[i] = new Object("Images/block5.png",i*32+2750,150,32,32); //boba fett battle square level 3 right
   }
 
-
   for (var i=231; i<=241;i++) {
     block[i] = new Object("Images/gold_block.png",i*32+1050,280,32,32); //jabba the hutt platform
   }
+
+  for (var i=243; i<=247;i++) {
+    block[i] = new Object("Images/block1.png",i*32+1250,280,32,32); // transition to ice blocks
+  }
+
+
+  // block[243] = new Object("Images/interior space ship 2.png",9400,0,0,0); //interior spaceship
+  // block[244] = new Object("Images/platform.png",8900,320,500,1200); //platform
 
 
   function randomBlocks(start, img, number, rangeX1, rangeX2) {
@@ -167,8 +175,8 @@ for (var i=51; i<=56;i++) {
     }
   }
 
-  randomBlocks(62,"Images/asteroid.png",78,4600,6000);
-  randomBlocks(79,"Images/asteroid2.png",90,4800,6200);
+  randomBlocks(62,"Images/asteroid.png",78,4500,6000);
+  randomBlocks(79,"Images/asteroid2.png",90,4700,6200);
 
   randomBlocks(130,"Images/gold_block.png",230,6900,8200);
 
@@ -306,7 +314,7 @@ function update(){
   if (keys[39]) player.velocityX = X_VELOCITY;
 
   // only scroll if it's not a boss fight
-  if (BOSS_FIGHT == false) {
+  if (BOBA_FIGHT == false) {
 
      // side scrolling blocks
      for(var i=0;i<=maxBlock;i++) block[i].X += -player.velocityX;
@@ -320,7 +328,7 @@ function update(){
 
   }
 
-  if (BOSS_FIGHT == true){
+  if (BOBA_FIGHT == true){
 
      BattleBoss(block[121]); // block 121 is boba fett boss
   }
@@ -454,14 +462,14 @@ function laserBeam(beam,speed,yoffset) {
      if (beam.Y < 0) {beam.Y=0}; // don't let beam off screen
    }
  }
-// if not boss_fight...
+// if not BOBA_FIGHT...
 laserBeam(beam, Math.random() *18 +1, Math.random() * 3+1 * DIRECTION);
 
 
 
 // check for boss fight, it will happen if player walks past fett
-if (block[121].isAlive && BOSS_FIGHT == false && player.X >= block[121].X) {
-   BOSS_FIGHT = true;
+if (block[121].isAlive && BOBA_FIGHT == false && player.X >= block[121].X) {
+   BOBA_FIGHT = true;
 }
 
 
@@ -483,6 +491,8 @@ if (block[121].isAlive && BOSS_FIGHT == false && player.X >= block[121].X) {
    player.isBoba=false;
    decayRate=.01; // no boba to look at, fade out faster
  }
+
+ if (player.isAlive==0) sndDies.play();
 
 }
 
@@ -526,7 +536,7 @@ function render(){
 
 
   //if fett is alive and has missiles, draw the missles that are alive then check for player collision
-  if(player.isAlive == true && BOSS_FIGHT==true && block[121].isAlive)
+  if(player.isAlive == true && BOBA_FIGHT==true && block[121].isAlive)
   {
      for (var i=0;i < bossmissiles.length;i++)
      {
@@ -549,11 +559,13 @@ function render(){
                   missile.sprite.src = "Images/explosion.png";
                   sndExplode.play();
                   grafx.drawImage(missile.sprite,bossmissiles[i].X,bossmissiles[i].Y)
-               }
-
+                  player.isAlive=0; // kill player here...
+                  player.isBoba=1;  // when killed by a beam, draw boba fett...
+                  decayRate=.003;   // fade to black on death slower than falling off the screen so we see fett dance
+                  player.HP -= 30;
+            }
         }
       }
-
   }
 
 }
@@ -601,7 +613,7 @@ function Object(img,x,y,width,height,sound) {
 function BattleBoss(boss) {
 
   // STAGE 0  : SHAKE
-  if (BOSS_STAGE ==0)
+  if (BOBA_BOSS_STAGE ==0)
   {
 
      var rndx = Math.random()+.007;
@@ -618,20 +630,20 @@ function BattleBoss(boss) {
      if (boss.Y < 0) {boss.Y=0};
      if (boss.Y > 256) {boss.Y=256};
 
-     if (boss.attackCounter >= 100 && BOSS_STAGE ==0) {
-         BOSS_STAGE = 1;
+     if (boss.attackCounter >= 100 && BOBA_BOSS_STAGE ==0) {
+         BOBA_BOSS_STAGE = 1;
      }
   }
 
   // STAGES : get faster over time, drop more missisles
-  if (BOSS_STAGE >=1) {
+  if (BOBA_BOSS_STAGE >=1) {
 
     boss.attackCounter = boss.attackCounter + 1;
 
      var trackingSpeed=2;
      var numMissiles=1;
 
-     switch (BOSS_STAGE)
+     switch (BOBA_BOSS_STAGE)
      {
         case 0 :
            numMissles    =0;
@@ -658,10 +670,11 @@ function BattleBoss(boss) {
      }
 
      // fett tracks player and creeps down
-     if (BOSS_STAGE==1)
+     if (BOBA_BOSS_STAGE==1)
      {
-        if (boss.Y < 100){
-           boss.Y = boss.Y + Math.random()*2;}
+        if (boss.Y < 50){
+          boss.Y = 50;}
+          //  boss.Y = boss.Y + Math.random()*2;}
 
         if (boss.X > player.X){
            boss.X = boss.X - trackingSpeed;}
@@ -671,7 +684,7 @@ function BattleBoss(boss) {
      }
 
      // fett runs away
-     if (BOSS_STAGE==2)
+     if (BOBA_BOSS_STAGE==2)
      {
         if (boss.X > player.X){
            boss.X = boss.X + trackingSpeed;}
@@ -683,7 +696,7 @@ function BattleBoss(boss) {
      }
 
      // fett tracks the player
-     if (BOSS_STAGE==3)
+     if (BOBA_BOSS_STAGE==3)
      {
         if (boss.X > player.X){
            boss.X = boss.X - trackingSpeed;}
@@ -693,7 +706,7 @@ function BattleBoss(boss) {
      }
 
      // fett tracks player and creeps up
-     if (BOSS_STAGE==4)
+     if (BOBA_BOSS_STAGE==4)
      {
         if (boss.Y >32){
            boss.Y = boss.Y - Math.random()*2;}
@@ -706,7 +719,7 @@ function BattleBoss(boss) {
      }
 
      // fett apeshit
-     if (BOSS_STAGE==5)
+     if (BOBA_BOSS_STAGE==5)
      {
         if(boss.X<=0 || boss.X_VELOCITY ==0) {boss.X_VELOCITY=Math.random()*10+1;}
         if(boss.X>=grafx.canvas.width-32) { boss.X_VELOCITY *= -1;}
@@ -722,7 +735,7 @@ function BattleBoss(boss) {
      // launch a missile
      var shoot = Math.random()*100+1;
 
-     if (shoot >=98-BOSS_STAGE) //this loop didn't work as expected...
+     if (shoot >=98-BOBA_BOSS_STAGE)
      {
 
         for(var j=0;j <numMissiles; j++) {
@@ -734,7 +747,7 @@ function BattleBoss(boss) {
                bossmissiles[j].X = boss.X;
                bossmissiles[j].Y = boss.Y+40;
 
-               if(BOSS_STAGE==1) {
+               if(BOBA_BOSS_STAGE==1) {
                 bossmissiles[j].sprite.src ="Images/coin.png";
                }
              break;
@@ -760,10 +773,10 @@ function BattleBoss(boss) {
 
         boss.attackCounter = 0;
 
-        BOSS_STAGE = BOSS_STAGE + 1;
+        BOBA_BOSS_STAGE = BOBA_BOSS_STAGE + 1;
 
-        if (BOSS_STAGE > 5) {
-           BOSS_STAGE = 1};
+        if (BOBA_BOSS_STAGE > 5) {
+           BOBA_BOSS_STAGE = 1};
 
      }
   }
@@ -775,6 +788,11 @@ function BattleBoss(boss) {
   if (player.X < 0) { player.X = 0;}
   if (player.X > grafx.canvas.width-32){ player.X = grafx.canvas.width-32;}
 
+  if (!keys[32] && player.isColliding(block[121]) && block[121].isAlive) {
+    player.X = 280;
+    player.Y = 300;
+  }
+
   // end boss fight
   if (keys[32] && player.isColliding(block[121]) && block[121].isAlive) {
     block[121].sprite.src = "Images/blank.png";
@@ -782,8 +800,8 @@ function BattleBoss(boss) {
     if(block[121].isAlive==true) { sndDies.play(); }
     block[121].isAlive = false;
     player.X = 280;
-    BOSS_FIGHT = false;
-   }
+    BOBA_FIGHT = false;
+  }
 
 }
 </script>
