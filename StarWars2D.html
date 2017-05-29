@@ -8,31 +8,35 @@ var gameCanvas = document.getElementById("graphics");
 var grafx = gameCanvas.getContext('2d');
 
 var player = new Object("Images/luke-right.png",280,200,24,41);
-var boba = new Object("Images/boba.png",2400,200-41,32,3); //dancing image when hit by beam
+var boba = new Object("Images/boba.png",2400,200-41,32,3); //dancing image when taking damage
 
-// var maxBeams = 20;
-// var beam = new Array();
-// for (var i = 0; i <= 20; i++) {
-//   beam[i] = new Object("Images/beam.png",2400,200-41,32,3);
-// }
+
 var beam = new Object("Images/beam.png",2400,200-41,32,3);
-
-
 var missile = new Object("Images/missile.png",6500,50,3,32);
+var icicle = new Object("Images/ice.png",9500,50,32,32);
 
-var bossmissiles = new Array();
+var bossMissiles = new Array();
+var bossIcicles = new Array();
 
 for (var i=0;i < 20;i++) {
 
-    bossmissiles[i] = new Object("Images/missile.png",0,0,3,32);
-    bossmissiles[i].isAlive = false;
-    bossmissiles[i].Y_VELOCITY = 0;
-
+    bossMissiles[i] = new Object("Images/missile.png",0,0,3,32);
+    bossMissiles[i].isAlive = false;
+    bossMissiles[i].Y_VELOCITY = 0;
   }
+
+for (var i=0;i < 50;i++) {
+
+    bossIcicles[i] = new Object("Images/ice.png",0,0,32,32);
+    bossIcicles[i].isAlive = false;
+    bossIcicles[i].X_VELOCITY = 0;
+}
 
 
 var BOBA_FIGHT = false; // advance to fett fight
 var BOBA_BOSS_STAGE = 0;     // multi-stage fight so we can progress / do different stuff
+var WAMPA_FIGHT = false; // advance to wampa fight
+var WAMPA_BOSS_STAGE = 0;     // multi-stage fight
 
 var alpha  = 1;         // alpha channel to fade out when we're dead
 var decayRate=.01;      // fades out slower if boba fett kills us
@@ -70,8 +74,10 @@ var sndHealth = new Audio("Audio/health.wav");
 var sndJawa = new Audio("Audio/jawa.mp3");
 var sndTusken = new Audio("Audio/Tusken-Raider-Yell.mp3");
 var sndJabba = new Audio("Audio/jabba_laugh.wav");
+var sndClash = new Audio("Audio/saber_clash.wav");
+var sndWampa = new Audio("Audio/wampa_roar.mp3");
 
-var maxBlock = 247;
+var maxBlock = 264;
 var block = new Array();
 
 //load block data
@@ -135,6 +141,24 @@ for (var i=51; i<=56;i++) {
 
   block[242] = new Object("Images/Jabba_the_Hutt.png",8580,215,20,0); // jabba the hutt
 
+  block[243] = new Object("Images/ice.png",9000,180,32,32); //transition to ice map
+
+  for (var i=244; i<=263;i++) {
+    block[i] = new Object("Images/ice.png",i*32+1580,350,32,32); //wampa battle square level 1
+  }
+
+  block[264] = new Object("Images/wampa.png",9970,255,58,100,'true'); //wampa boss
+
+
+
+  // millenium falcon background
+  // block[UNK] = new Object("Images/mil-big.png",9900,-40,800,1000);
+  //millenium falcon platform
+  // block[245] = new Object("Images/millenium_falcon_cut.png",9900,242,920,1000);
+
+  //interior spaceship
+  // block[243] = new Object("Images/interior space ship 2.png",9400,0,0,0); //interior spaceship
+  // block[244] = new Object("Images/platform.png",8900,320,500,1200); //platform
 
   for (var i=91; i<=110;i++) {
     block[i] = new Object("Images/block5.png",i*32+3300,350,32,32); //boba fett battle square level 1
@@ -159,13 +183,12 @@ for (var i=51; i<=56;i++) {
     block[i] = new Object("Images/gold_block.png",i*32+1050,280,32,32); //jabba the hutt platform
   }
 
-  for (var i=243; i<=247;i++) {
-    block[i] = new Object("Images/block1.png",i*32+1250,280,32,32); // transition to ice blocks
-  }
+  // for (var i=243; i<=247;i++) {
+  //   block[i] = new Object("Images/block1.png",i*32+1250,280,32,32); // transition to ice blocks
+  // }
 
 
-  // block[243] = new Object("Images/interior space ship 2.png",9400,0,0,0); //interior spaceship
-  // block[244] = new Object("Images/platform.png",8900,320,500,1200); //platform
+
 
 
   function randomBlocks(start, img, number, rangeX1, rangeX2) {
@@ -314,7 +337,7 @@ function update(){
   if (keys[39]) player.velocityX = X_VELOCITY;
 
   // only scroll if it's not a boss fight
-  if (BOBA_FIGHT == false) {
+  if (BOBA_FIGHT == false && WAMPA_FIGHT == false) {
 
      // side scrolling blocks
      for(var i=0;i<=maxBlock;i++) block[i].X += -player.velocityX;
@@ -328,10 +351,33 @@ function update(){
 
   }
 
+  //   // only scroll if it's not a boss fight
+  // if (WAMPA_FIGHT == false) {
+  //
+  //  // side scrolling blocks
+  //  for(var i=0;i<=maxBlock;i++) block[i].X += -player.velocityX;
+  //     player.Y += player.velocityY;
+  //
+  //  // side scrolling coins
+  //  for(var i=0;i<=maxCoin;i++) coin[i].X += -player.velocityX;
+  //
+  //  // side scrolling health
+  //  for(var i=0;i<=maxHealth;i++) health[i].X += -player.velocityX;
+  //
+  // }
+
   if (BOBA_FIGHT == true){
 
-     BattleBoss(block[121]); // block 121 is boba fett boss
+     BobaBoss(block[121]); // block 121 is boba fett boss
   }
+
+  if (WAMPA_FIGHT == true){
+
+     WampaBoss(block[264]); // block 264 is wampa boss
+  }
+
+  console.log("wampa distance: ", block[264].X - player.X);
+  console.log("wampa y", block[264].Y);
 
   // stops player from moving
   if (!keys[37] && !keys[39] && player.velocityY == 0) player.velocityX = 0;
@@ -423,6 +469,7 @@ function update(){
  if (player.isColliding(block[128])) sndTusken.play();
  if (player.isColliding(block[242])) sndJabba.play();
 
+
  function isShooting(enemy,beam,speed,amount) {
    if ((enemy.X - player.X) < 320 && (enemy.X - player.X) > 0) {
      if (enemy.isShooting) {
@@ -443,7 +490,7 @@ function update(){
      if (keys[32] && player.isColliding(enemy) && enemy.isAlive) {
        enemy.sprite.src = "Images/blank.png";
        player.score += 100;
-       if(enemy.isAlive==true) { sndDies.play(); }
+       if(enemy.isAlive==true) { sndClash.play(); }
        enemy.isAlive = false;
       }
   }
@@ -470,6 +517,12 @@ laserBeam(beam, Math.random() *18 +1, Math.random() * 3+1 * DIRECTION);
 // check for boss fight, it will happen if player walks past fett
 if (block[121].isAlive && BOBA_FIGHT == false && player.X >= block[121].X) {
    BOBA_FIGHT = true;
+}
+
+// check for boss fight, it will happen if player walks near wampa
+if (block[264].isAlive && WAMPA_FIGHT == false && ((block[264].X - player.X) <= 265)) {
+   WAMPA_FIGHT = true;
+   console.log("WAMPA FIGHT!");
 }
 
 
@@ -530,35 +583,31 @@ function render(){
     grafx.drawImage(boba.sprite,120,60-(SCALE*3),400,400);
   }
 
-  // draw player?
-  if (player.isAlive==true) { grafx.drawImage(player.sprite,player.X,player.Y);}
-
-
 
   //if fett is alive and has missiles, draw the missles that are alive then check for player collision
   if(player.isAlive == true && BOBA_FIGHT==true && block[121].isAlive)
   {
-     for (var i=0;i < bossmissiles.length;i++)
+     for (var i=0;i < bossMissiles.length;i++)
      {
-        if (bossmissiles[i].isAlive==true)
+        if (bossMissiles[i].isAlive==true)
         {
-            grafx.drawImage(bossmissiles[i].sprite,bossmissiles[i].X,bossmissiles[i].Y);
+            grafx.drawImage(bossMissiles[i].sprite,bossMissiles[i].X,bossMissiles[i].Y);
             //should set up an array of explosions with time to live counter.
 
             for (var j=0; j<=maxBlock; j++){
-            if (bossmissiles[i].isColliding(block[j])) {
-                  bossmissiles[i].isAlive=false;
+            if (bossMissiles[i].isColliding(block[j])) {
+                  bossMissiles[i].isAlive=false;
                   missile.sprite.src = "Images/explosion.png";
                   sndExplode.play();
-                  grafx.drawImage(missile.sprite,bossmissiles[i].X,bossmissiles[i].Y)
+                  grafx.drawImage(missile.sprite,bossMissiles[i].X,bossMissiles[i].Y)
                }
              }
 
-            if (bossmissiles[i].isColliding(player)) {
-                  bossmissiles[i].isAlive=false;
+            if (bossMissiles[i].isColliding(player)) {
+                  bossMissiles[i].isAlive=false;
                   missile.sprite.src = "Images/explosion.png";
                   sndExplode.play();
-                  grafx.drawImage(missile.sprite,bossmissiles[i].X,bossmissiles[i].Y)
+                  grafx.drawImage(missile.sprite,bossMissiles[i].X,bossMissiles[i].Y)
                   player.isAlive=0; // kill player here...
                   player.isBoba=1;  // when killed by a beam, draw boba fett...
                   decayRate=.003;   // fade to black on death slower than falling off the screen so we see fett dance
@@ -567,6 +616,35 @@ function render(){
         }
       }
   }
+
+  //if wampa is alive and has icicles, draw the icicles that are alive then check for player collision
+  if(player.isAlive == true && WAMPA_FIGHT==true && block[264].isAlive)
+  {
+     for (var i=0;i < bossIcicles.length;i++)
+     {
+        if (bossIcicles[i].isAlive==true)
+        {
+            grafx.drawImage(bossIcicles[i].sprite,bossIcicles[i].X,bossIcicles[i].Y);
+            //should set up an array of icicles with time to live counter.
+
+
+            if (bossIcicles[i].isColliding(player)) {
+                  bossIcicles[i].isAlive=false;
+                  icicle.sprite.src = "Images/ice.png";
+                  // sndExplode.play();
+                  grafx.drawImage(icicle.sprite,bossIcicles[i].X,bossIcicles[i].Y)
+                  player.isAlive=0; // kill player here...
+                  player.isBoba=1;  // when killed by a beam, draw boba fett...
+                  decayRate=.003;   // fade to black on death slower than falling off the screen so we see fett dance
+                  player.HP -= 30;
+            }
+        }
+      }
+  }
+
+  // draw player if alive
+  if (player.isAlive==true) { grafx.drawImage(player.sprite,player.X,player.Y);}
+
 
 }
 
@@ -600,6 +678,7 @@ function Object(img,x,y,width,height,sound) {
   // for boss fight...
   this.attackCounter  = 0;
   this.missiles = new Array();
+  this.icicles = new Array();
 
   this.isColliding = function(obj) {
     if (this.X > obj.X + obj.Width) return false;
@@ -610,7 +689,7 @@ function Object(img,x,y,width,height,sound) {
   }
 }
 
-function BattleBoss(boss) {
+function BobaBoss(boss) {
 
   // STAGE 0  : SHAKE
   if (BOBA_BOSS_STAGE ==0)
@@ -739,16 +818,16 @@ function BattleBoss(boss) {
      {
 
         for(var j=0;j <numMissiles; j++) {
-           if(bossmissiles[j].isAlive == false)
+           if(bossMissiles[j].isAlive == false)
            {
-               bossmissiles[j].isAlive = true;
-               bossmissiles[j].Y_VELOCITY = Math.random()*4+1;
+               bossMissiles[j].isAlive = true;
+               bossMissiles[j].Y_VELOCITY = Math.random()*4+1;
 
-               bossmissiles[j].X = boss.X;
-               bossmissiles[j].Y = boss.Y+40;
+               bossMissiles[j].X = boss.X;
+               bossMissiles[j].Y = boss.Y+40;
 
                if(BOBA_BOSS_STAGE==1) {
-                bossmissiles[j].sprite.src ="Images/coin.png";
+                bossMissiles[j].sprite.src ="Images/coin.png";
                }
              break;
            }
@@ -756,14 +835,14 @@ function BattleBoss(boss) {
      }
 
      // move missles and expire them if they go past the player...
-     for(var j=0;j < bossmissiles.length; j ++)
+     for(var j=0;j < bossMissiles.length; j ++)
      {
-        if(bossmissiles[j].isAlive == true)
+        if(bossMissiles[j].isAlive == true)
         {
-             bossmissiles[j].Y = bossmissiles[j].Y + bossmissiles[j].Y_VELOCITY;
+             bossMissiles[j].Y = bossMissiles[j].Y + bossMissiles[j].Y_VELOCITY;
         }
-        if (bossmissiles[j].Y >= grafx.canvas.height) {
-           bossmissiles[j].isAlive = false;
+        if (bossMissiles[j].Y >= grafx.canvas.height) {
+           bossMissiles[j].isAlive = false;
         }
      }
 
@@ -797,11 +876,185 @@ function BattleBoss(boss) {
   if (keys[32] && player.isColliding(block[121]) && block[121].isAlive) {
     block[121].sprite.src = "Images/blank.png";
     player.score += 1000;
-    if(block[121].isAlive==true) { sndDies.play(); }
+    if(block[121].isAlive==true) { sndClash.play(); }
     block[121].isAlive = false;
     player.X = 280;
     BOBA_FIGHT = false;
   }
 
 }
+
+
+function WampaBoss(boss) {
+
+  // STAGE 0  : SHAKE
+  if (WAMPA_BOSS_STAGE ==0)
+  {
+     sndWampa.play();
+
+     var rndx = Math.random()+.07;
+    //  var rndy = Math.random();
+
+     if (Math.random() > .5) {rndx *= -1; }
+    //  if (Math.random() > .5) {rndy *= -1; }
+
+     boss.attackCounter = boss.attackCounter + 1;
+
+     boss.X = boss.X + rndx;
+    //  boss.Y = boss.Y + rndy;
+
+     if (boss.Y < 0) {boss.Y=0};
+     if (boss.Y > 256) {boss.Y=256};
+
+     if (boss.attackCounter >= 100 && WAMPA_BOSS_STAGE ==0) {
+         WAMPA_BOSS_STAGE = 1;
+     }
+  }
+
+  // STAGES : get faster over time, drop more missisles
+  if (WAMPA_BOSS_STAGE >=1) {
+
+    boss.attackCounter = boss.attackCounter + 1;
+
+    //  var trackingSpeed=2;
+     var numIcicles=1;
+
+     switch (WAMPA_BOSS_STAGE)
+     {
+        case 0 :
+           numIcicles    =0;
+          //  trackingSpeed =0;
+        case 1 :
+          //  trackingSpeed = 1.5;
+           numIcicles   = 1;
+           break;
+        case 2 :
+          //  trackingSpeed = 2.9;
+           numIcicles    = 2;
+           break;
+        case 3 :
+          //  trackingSpeed = 5;
+           numIcicles  = 3;
+        case 4 :
+          //  trackingSpeed = 5;
+           numIcicles  = 4;
+           break;
+        case 5 :
+          //  trackingSpeed = 0;
+           numIcicles  = 5;
+           break;
+     }
+
+
+     if (WAMPA_BOSS_STAGE==1)
+     {
+       sndWampa.play();
+
+        if (boss.Y > 150){
+          boss.Y -= 5;
+          boss.X = boss.X - Math.random()*2;
+        }
+
+        if (boss.Y == 150) {
+          boss.Y += 105;
+        }
+     }
+
+     if (WAMPA_BOSS_STAGE==2)
+     {
+       if (boss.Y < 250) {
+         boss.Y = 255;
+         boss.X += 200;
+       }
+     }
+
+
+    if (WAMPA_BOSS_STAGE==3)
+    {
+      sndWampa.play();
+      boss.X -= 25;
+    }
+
+
+     // did wampa run off screen?
+     if (boss.X <= 0) {boss.X = grafx.canvas.width;}
+    // if (boss.X >= grafx.canvas.width) { boss.X = grafx.canvas.width;}
+
+     // launch an icicle
+     var shoot = Math.random()*100+1;
+
+     if (shoot >=0) //98-WAMPA_BOSS_STAGE
+     {
+
+        for(var j=0;j <numIcicles; j++) {
+           if(bossIcicles[j].isAlive == false)
+           {
+               bossIcicles[j].isAlive = true;
+              //  bossIcicles[j].X -= 3;
+               bossIcicles[j].X_VELOCITY -= 3; //Math.random()*4-1;
+
+              //  bossIcicles[j].X = boss.X;
+               bossIcicles[j].X = boss.X-58;
+               bossIcicles[j].Y = boss.Y;
+
+               if(WAMPA_BOSS_STAGE==1) {
+                bossIcicles[j].sprite.src ="Images/ice.png";
+               }
+             break;
+           }
+        }
+     }
+
+     // move icicles and expire them if they go past the player...
+     for(var j=0;j < bossIcicles.length; j ++)
+     {
+        if(bossIcicles[j].isAlive == true)
+        {
+             bossIcicles[j].X = bossIcicles[j].X + bossIcicles[j].X_VELOCITY;
+        }
+        if (bossIcicles[j].X <= grafx.canvas.width - 600) {
+           bossIcicles[j].isAlive = false;
+        }
+     }
+
+     // increment the boss battle stage
+     if (boss.attackCounter > 300){
+
+        boss.attackCounter = 0;
+
+        WAMPA_BOSS_STAGE = WAMPA_BOSS_STAGE + 1;
+
+        if (WAMPA_BOSS_STAGE > 5) {
+           WAMPA_BOSS_STAGE = 1
+         };
+     }
+
+
+  // move the player now, not the blocks and bind the player to the battle field (screen)
+  player.X += player.velocityX;
+  player.Y += player.velocityY;
+
+  if (player.X < 0) { player.X = 0;}
+  if (player.X > grafx.canvas.width-32){ player.X = grafx.canvas.width-32;}
+
+  // if (!keys[32] && player.isColliding(block[264]) && block[264].isAlive) {
+  //   player.X = 280;
+  //   player.Y = 300;
+  // }
+
+  // end boss fight
+  if (keys[32] && player.isColliding(block[264]) && block[264].isAlive) {
+    block[264].sprite.src = "Images/blank.png";
+    player.score += 10000;
+    if(block[264].isAlive==true) { sndClash.play(); }
+    block[264].isAlive = false;
+    player.X = 280;
+    WAMPA_FIGHT = false;
+  }
+
+ }
+}
+
+
+
 </script>
