@@ -25,7 +25,7 @@ for (var i=0;i < 20;i++) {
     bossMissiles[i].Y_VELOCITY = 0;
   }
 
-for (var i=0;i < 50;i++) {
+for (var i=0;i < 500;i++) {
 
     bossIcicles[i] = new Object("Images/ice.png",0,0,32,32);
     bossIcicles[i].isAlive = false;
@@ -55,7 +55,7 @@ var keys = [];
 
 
 var theme1 = document.getElementById("theme1");
-    theme1.play();
+  //  theme1.play();
 function theme1End() {
     theme1.play();
 }
@@ -78,7 +78,7 @@ var sndJabba = new Audio("Audio/jabba_laugh.wav");
 var sndClash = new Audio("Audio/saber_clash.wav");
 var sndWampa = new Audio("Audio/wampa_roar.mp3");
 
-var maxBlock = 285;
+var maxBlock = 291;
 var block = new Array();
 
 //load block data
@@ -164,7 +164,8 @@ for (var i=51; i<=56;i++) {
     block[i] = new Object("Images/gold_block.png",i*32+1050,280,32,32); //jabba the hutt platform
   }
 
-  block[242] = new Object("Images/Jabba_the_Hutt.png",8580,215,20,0); // jabba the hutt
+  block[290] = new Object("Images/cage_lea.png",8650,0,32,100); //slave lea
+  block[291] = new Object("Images/Jabba_the_Hutt.png",8580,215,20,0); // jabba the hutt
 
   block[243] = new Object("Images/ice.png",9000,180,32,32); //transition to ice map
 
@@ -182,7 +183,7 @@ for (var i=51; i<=56;i++) {
   }
 
   block[264] = new Object("Images/wampa.png",9970,255,58,100,'true'); //wampa boss
-
+  block[242] = new Object("Images/cave.png",9380,0,0,0); //ice cave background
 
 //  millenium falcon background
   block[274] = new Object("Images/millenium_falcon_background.png",10200,-40,800,1000);
@@ -190,21 +191,24 @@ for (var i=51; i<=56;i++) {
   block[275] = new Object("Images/millenium_falcon_cut.png",10200,242,1000,1000);
 
 
-
   //interior spaceship
-  block[276] = new Object("Images/interior_space_ship.png",11300,0,0,0); //interior spaceship
-  block[277] = new Object("Images/interior_space_ship.png",11900,0,0,0); //interior spaceship
-  block[278] = new Object("Images/interior_space_ship.png",12500,0,0,0); //interior spaceship
-  block[279] = new Object("Images/interior_space_ship.png",13100,0,0,0); //interior spaceship
+  block[276] = new Object("Images/interior_space_ship.png",11300,0,0,0); //interior spaceship 1
+  block[277] = new Object("Images/interior_space_ship.png",11900,0,0,0); //interior spaceship 2
+  block[278] = new Object("Images/interior_space_ship.png",12500,0,0,0); //interior spaceship 3
+  block[279] = new Object("Images/interior_space_ship.png",13100,0,0,0); //interior spaceship 4
+  block[280] = new Object("Images/interior_space_ship_purple.png",13700,0,0,0); //interior spaceship purple 1
+  block[281] = new Object("Images/interior_space_ship_purple.png",14300,0,0,0); //interior spaceship purple 2
+  block[282] = new Object("Images/interior_space_ship_purple.png",14900,0,0,0); //interior spaceship purple 3
 
   //interior platform
-  block[280] = new Object("Images/platform.png",11200,320,500,1200); //platform
-  block[281] = new Object("Images/platform.png",11700,320,500,1200); //platform
-  block[282] = new Object("Images/platform.png",12200,320,500,1200); //platform
-  block[283] = new Object("Images/platform.png",12700,320,500,1200); //platform
-  block[284] = new Object("Images/platform.png",13200,320,500,1200); //platform
-  block[285] = new Object("Images/platform.png",13700,320,500,1200); //platform
-
+  block[283] = new Object("Images/platform_wide.png",11300,320,600,1200); //platform 1
+  block[284] = new Object("Images/platform_wide.png",11900,320,600,1200); //platform 2
+  block[285] = new Object("Images/platform_wide.png",12500,320,600,1200); //platform 3
+  block[286] = new Object("Images/platform_wide.png",13100,320,600,1200); //platform 4
+  block[287] = new Object("Images/platform_purple.png",13700,320,600,1200); //platform purple 1
+  block[288] = new Object("Images/platform_purple.png",14300,320,600,1200); //platform purple 2
+  block[289] = new Object("Images/platform_purple.png",14900,320,600,1200); //platform purple 3
+  // block[292] = new Object("Images/platform_purple.png",15300,320,600,1200); //platform purple 4
 
 
 
@@ -259,29 +263,6 @@ var timestep = 1000 / 60;
 var running = false,
     started = false;
 
-// function stop() {
-//     running = false;
-//     started = false;
-//     cancelAnimationFrame(frameID);
-// }
-
-// function start() {
-//     if (!started) { // don't request multiple frames
-//         started = true;
-//         // Dummy frame to get our timestamps and initial drawing right.
-//         // Track the frame ID so we can cancel it if we stop quickly.
-//         frameID = requestAnimationFrame(function(timestamp) {
-//             render(1); // initial render
-//             running = true;
-//             // reset some time tracking variables
-//             lastFrameTimeMs = timestamp;
-//             lastFpsUpdate = timestamp;
-//             framesThisSecond = 0;
-//             // actually start the game loop
-//             frameID = requestAnimationFrame(game);
-//         });
-//     }
-// }
 
 function game(timestamp){
   // Track the accumulated time that hasn't been simulated yet
@@ -370,20 +351,6 @@ function update(){
 
   }
 
-  //   // only scroll if it's not a boss fight
-  // if (WAMPA_FIGHT == false) {
-  //
-  //  // side scrolling blocks
-  //  for(var i=0;i<=maxBlock;i++) block[i].X += -player.velocityX;
-  //     player.Y += player.velocityY;
-  //
-  //  // side scrolling coins
-  //  for(var i=0;i<=maxCoin;i++) coin[i].X += -player.velocityX;
-  //
-  //  // side scrolling health
-  //  for(var i=0;i<=maxHealth;i++) health[i].X += -player.velocityX;
-  //
-  // }
 
   if (BOBA_FIGHT == true){
 
@@ -486,7 +453,7 @@ function update(){
  if (player.isColliding(block[58])) sndHanSolo.play();
  if (player.isColliding(block[126])) sndJawa.play();
  if (player.isColliding(block[128])) sndTusken.play();
- if (player.isColliding(block[242])) sndJabba.play();
+ if (player.isColliding(block[291])) sndJabba.play();
 
 
  function isShooting(enemy,beam,speed,amount) {
@@ -513,9 +480,11 @@ function update(){
        enemy.isAlive = false;
       }
   }
+
   killsEnemy(block[57]);
   killsEnemy(block[59]);
   killsEnemy(block[121]);
+
 
 function laserBeam(beam,speed,yoffset) {
    beam.X += -speed;
@@ -570,10 +539,6 @@ if (block[264].isAlive && WAMPA_FIGHT == false && ((block[264].X - player.X) <= 
 
 function render(){
   grafx.clearRect(0,0,gameCanvas.width,gameCanvas.height);
-
-  grafx.fillStyle = "#c4c332";
-  grafx.fillText("HP " + player.HP,10,20);
-  grafx.fillText("Score " + player.score,55,20);
 
   for (var i=0; i<=maxBlock;i++)
       { grafx.drawImage(block[i].sprite,block[i].X,block[i].Y); }
@@ -664,6 +629,9 @@ function render(){
   // draw player if alive
   if (player.isAlive==true) { grafx.drawImage(player.sprite,player.X,player.Y);}
 
+  grafx.fillStyle = "#c4c332";
+  grafx.fillText("HP " + player.HP,10,20);
+  grafx.fillText("Score " + player.score,55,20);
 
 }
 
@@ -940,21 +908,21 @@ function WampaBoss(boss) {
      switch (WAMPA_BOSS_STAGE)
      {
         case 0 :
-           numIcicles    =0;
+           numIcicles    =1;
         case 1 :
-           numIcicles   = 1;
+           numIcicles   = 2;
            break;
         case 2 :
-           numIcicles    = 2;
+           numIcicles    = 4;
            break;
         case 3 :
-           numIcicles  = 3;
+           numIcicles  = 6;
         case 4 :
            numIcicles  = 8;
            break;
-        // case 5 :
-        //    numIcicles  = 5;
-        //    break;
+        case 5 :
+           numIcicles  = 12;
+           break;
      }
 
 
@@ -977,7 +945,7 @@ function WampaBoss(boss) {
        sndWampa.play();
        if (boss.Y < 250) {
          boss.Y = 255;
-         boss.X += 200;
+         boss.X += 100;
        }
      }
 
@@ -1002,6 +970,13 @@ function WampaBoss(boss) {
       if (boss.Y == 150) {
         boss.Y += 105;
       }
+    }
+
+    if (WAMPA_BOSS_STAGE==5)
+    {
+      sndWampa.play();
+      boss.Y = 255;
+      boss.X -= 35;
     }
 
 
@@ -1047,7 +1022,7 @@ function WampaBoss(boss) {
      }
 
      // increment the boss battle stage
-     if (boss.attackCounter > 300){
+     if (boss.attackCounter > 200){
 
         boss.attackCounter = 0;
 
