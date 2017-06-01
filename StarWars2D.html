@@ -78,8 +78,9 @@ var sndJabba = new Audio("Audio/jabba_laugh.wav");
 var sndClash = new Audio("Audio/saber_clash.wav");
 var sndWampa = new Audio("Audio/wampa_roar.mp3");
 var sndObi = new Audio("Audio/ways_of_the_force.mp3");
+var sndLeia = new Audio("Audio/badfeel.mp3");
 
-var maxBlock = 325;
+var maxBlock = 333;
 var block = new Array();
 
 //load block data
@@ -163,8 +164,8 @@ for (var i=51; i<=56;i++) {
     block[i] = new Object("Images/gold_block.png",i*32+1050,280,32,32); //jabba the hutt platform
   }
 
-  block[290] = new Object("Images/cage_lea.png",8650,0,32,100); //slave lea
-  block[291] = new Object("Images/Jabba_the_Hutt.png",8580,215,20,0); // jabba the hutt
+  block[290] = new Object("Images/cage_lea.png",8650,0,32,200); //slave leia
+  block[291] = new Object("Images/Jabba_the_Hutt.png",8580,215,20,100); // jabba the hutt
 
   block[243] = new Object("Images/ice.png",9000,180,32,32); //transition to ice map
 
@@ -199,6 +200,18 @@ for (var i=51; i<=56;i++) {
   block[277] = new Object("Images/interior_space_ship.png",11900,0,0,0); //interior spaceship 2
   block[278] = new Object("Images/interior_space_ship.png",12500,0,0,0); //interior spaceship 3
   block[279] = new Object("Images/interior_space_ship.png",13100,0,0,0); //interior spaceship 4
+
+  //interior spaceeship window blocks
+  block[326] = new Object("Images/window_block.png",11450,200,32,32); //window block 1
+  block[327] = new Object("Images/window_block.png",11750,200,32,32); //window block 2
+  block[328] = new Object("Images/window_block.png",12050,200,32,32); //window block 3
+  block[329] = new Object("Images/window_block.png",12350,200,32,32); //window block 4
+  block[330] = new Object("Images/window_block.png",12600,200,32,32); //window block 5
+  block[331] = new Object("Images/window_block.png",12850,200,32,32); //window block 6
+  block[332] = new Object("Images/window_block.png",13100,200,32,32); //window block 7
+  block[333] = new Object("Images/window_block.png",13350,200,32,32); //window block 8
+
+  //interior spaceship purple
   block[280] = new Object("Images/interior_space_ship_purple.png",13700,0,0,0); //interior spaceship purple 1
   block[281] = new Object("Images/interior_space_ship_purple.png",14300,0,0,0); //interior spaceship purple 2
   block[282] = new Object("Images/interior_space_ship_purple.png",14900,0,0,0); //interior spaceship purple 3
@@ -208,6 +221,7 @@ for (var i=51; i<=56;i++) {
   block[284] = new Object("Images/platform_wide.png",11900,320,600,1200); //platform 2
   block[285] = new Object("Images/platform_wide.png",12500,320,600,1200); //platform 3
   block[286] = new Object("Images/platform_wide.png",13100,320,600,1200); //platform 4
+  //interior platform purple
   block[287] = new Object("Images/platform_purple.png",13700,320,600,1200); //platform purple 1
   block[288] = new Object("Images/platform_purple.png",14300,320,600,1200); //platform purple 2
   block[289] = new Object("Images/platform_purple.png",14900,320,600,1200); //platform purple 3
@@ -230,7 +244,7 @@ for (var i=51; i<=56;i++) {
     }
   }
 
-  randomBlocks(62,"Images/asteroid.png",78,4500,6000);
+  randomBlocks(62,"Images/asteroid.png",78,4550,6000);
   randomBlocks(79,"Images/asteroid2.png",90,4700,6200);
 
   randomBlocks(130,"Images/gold_block.png",230,6900,8200);
@@ -464,6 +478,7 @@ function update(){
  if (player.isColliding(block[128])) sndTusken.play();
  if (player.isColliding(block[291])) sndJabba.play();
  if (player.isColliding(block[292])) sndObi.play();
+ if (player.isColliding(block[290])) sndLeia.play();
 
 
  function isShooting(enemy,beam,speed,amount) {
