@@ -7,17 +7,29 @@
 var gameCanvas = document.getElementById("graphics");
 var grafx = gameCanvas.getContext('2d');
 
+//Luke Skywalker (main player)
 var player = new Object("Images/luke-right.png",280,200,24,41);
-var boba = new Object("Images/boba.png",2400,200-41,32,3); //dancing image when taking damage
+//dancing image when taking damage
+var boba = new Object("Images/boba.png",2400,200-41,32,3);
 
-
+/*
+  ammunition variables
+ */
 var beam = new Object("Images/beam.png",2400,200-41,32,3);
 var missile = new Object("Images/missile.png",6500,50,3,32);
 var icicle = new Object("Images/ice.png",9500,50,32,32);
+var lightening = new Object("Images/lightening.png",15500-34,320-41,40,2);
 
+/*
+  ammunition arrays for boss fights
+ */
 var bossMissiles = new Array();
 var bossIcicles = new Array();
+var bossLightening = new Array();
 
+/*
+  loops through ammunition for boss fights to draw and remove ammo as needed
+ */
 for (var i=0;i < 20;i++) {
 
     bossMissiles[i] = new Object("Images/missile.png",0,0,3,32);
@@ -25,41 +37,61 @@ for (var i=0;i < 20;i++) {
     bossMissiles[i].Y_VELOCITY = 0;
   }
 
-for (var i=0;i < 500;i++) {
+for (var i=0;i < 8000;i++) {
 
     bossIcicles[i] = new Object("Images/ice.png",0,0,32,32);
     bossIcicles[i].isAlive = false;
     bossIcicles[i].X_VELOCITY = 0;
 }
 
+for (var i=0;i < 12000;i++) {
 
-var BOBA_FIGHT = false; // advance to fett fight
-var BOBA_BOSS_STAGE = 0;     // multi-stage fight so we can progress / do different stuff
-var WAMPA_FIGHT = false; // advance to wampa fight
-var WAMPA_BOSS_STAGE = 0;     // multi-stage fight
+    bossLightening[i] = new Object("Images/lightening.png",0,0,40,2);
+    bossLightening[i].isAlive = false;
+    bossLightening[i].X_VELOCITY = 0;
+  }
 
-var alpha  = 1;         // alpha channel to fade out when we're dead
-var decayRate=.01;      // fades out slower if boba fett kills us
-var SCALE  = 20;        // used to make the coins change size
+// advance to fett fight
+var BOBA_FIGHT = false;
+// multi-stage fight so we can progress / do different stuff
+var BOBA_BOSS_STAGE = 0;
+// advance to wampa fight
+var WAMPA_FIGHT = false;
+// multi-stage fight so we can progress / do different stuff
+var WAMPA_BOSS_STAGE = 0;
+// advance to Sidious fight
+var SIDIOUS_FIGHT = false;
+// multi-stage fight so we can progress / do different stuff
+var SIDIOUS_BOSS_STAGE = 0;
+
+// alpha channel to fade out when we're dead
+var alpha  = 1;
+// fades out slower if boba fett kills us
+var decayRate=.01;
+// used to make the coins change size
+var SCALE  = 20;
 var DIRECTION = 1;
 
+// standard X and Y velocities
 var X_VELOCITY = 3;
 var Y_VELOCITY = 5;
 
+// main player (Luke) gavity and weight
 player.Gravity = 20;
 player.Weight = 0.1;
-//player.X = 2048;
-/*  up: 38  left: 37  right: 39  space: 32 */
 
+/*  up: 38  left: 37  right: 39  space: 32 shift: 16  */
 var keys = [];
 
 
+/* main game theme (Cantina song) */
 var theme1 = document.getElementById("theme1");
     theme1.play();
 function theme1End() {
     theme1.play();
 }
 
+/* audio variables to be accessed as needed */
 var sndJump = new Audio("Audio/Jump.mp3");
 var sndSaberOn = new Audio("Audio/light-saber-on.mp3");
 var sndCoin = new Audio("Audio/coin.wav");
@@ -79,8 +111,16 @@ var sndClash = new Audio("Audio/saber_clash.wav");
 var sndWampa = new Audio("Audio/wampa_roar.mp3");
 var sndObi = new Audio("Audio/ways_of_the_force.mp3");
 var sndLeia = new Audio("Audio/badfeel.mp3");
+var sndDarthSid1 = new Audio("Audio/you_will_be_destroyed.mp3");
+var sndLightening = new Audio("Audio/lightening.mp3");
 
-var maxBlock = 333;
+
+/*
+  maxBlock represents the total amount of objects
+  each 'block' makes up the array of objects in game
+*/
+
+var maxBlock = 341;
 var block = new Array();
 
 //load block data
@@ -133,7 +173,9 @@ for (var i=51; i<=56;i++) {
   block[60] = new Object("Images/block3.png",4200,190,32,32); //storm trooper 2 block
   block[61] = new Object("Images/block3.png",4200-32,190,32,32);
 
-  block[121] = new Object("Images/boba_fett.png",6500,50-41,20,41,'true'); //boba fett enemy
+  //boba fett boss
+  block[121] = new Object("Images/boba_fett.png",6500,50-41,20,41,'true');
+
   block[125] = new Object("Images/blank.png",6820,350,32,32); // range 2 boba fett battle
 
   block[127] = new Object("Images/asteroid2.png",5000,200+28,32,32); //tusken raider block
@@ -182,14 +224,15 @@ for (var i=51; i<=56;i++) {
     block[i] = new Object("Images/ice.png",i*32+1200,225,32,32); //wampa battle square level 2 right
   }
 
-  block[264] = new Object("Images/wampa.png",9970,255,58,100,'true'); //wampa boss
+  //wampa boss
+  block[264] = new Object("Images/wampa.png",9970,255,58,100,'true');
   block[242] = new Object("Images/cave.png",9380,0,0,0); //ice cave background
 
   block[37] = new Object("Images/Chewie-front.png",10450,170,32,50); // Chewbacca
   block[58] = new Object("Images/HanSolo-front.png",10700,160,20,41); //Han Solo
-//  millenium falcon background
+  //  millenium falcon background
   block[274] = new Object("Images/millenium_falcon_background.png",10200,-40,800,1000);
-//  millenium falcon platform
+  //  millenium falcon platform
   block[275] = new Object("Images/millenium_falcon_cut.png",10200,242,1000,1000);
 
   block[292] = new Object("Images/Obiwan.png",2580,260,32,41); //Obi-Wan Kenobi
@@ -216,6 +259,15 @@ for (var i=51; i<=56;i++) {
   block[281] = new Object("Images/interior_space_ship_purple.png",14300,0,0,0); //interior spaceship purple 2
   block[282] = new Object("Images/interior_space_ship_purple.png",14900,0,0,0); //interior spaceship purple 3
 
+  //interior spaceship purple window blocks (Darth Sidious boss level)
+  block[335] = new Object("Images/window_block.png",15050,250,32,32);
+  block[336] = new Object("Images/window_block.png",15050,150,32,32);
+  block[337] = new Object("Images/window_block.png",15050,50,32,32);
+  block[338] = new Object("Images/window_block.png",15185,150,32,32);
+  block[339] = new Object("Images/window_block.png",15330,250,32,32);
+  block[340] = new Object("Images/window_block.png",15330,150,32,32);
+  block[341] = new Object("Images/window_block.png",15330,50,32,32);
+
   //interior platform
   block[283] = new Object("Images/platform_wide.png",11300,320,600,1200); //platform 1
   block[284] = new Object("Images/platform_wide.png",11900,320,600,1200); //platform 2
@@ -226,7 +278,11 @@ for (var i=51; i<=56;i++) {
   block[288] = new Object("Images/platform_purple.png",14300,320,600,1200); //platform purple 2
   block[289] = new Object("Images/platform_purple.png",14900,320,600,1200); //platform purple 3
 
+  // Darth Sidious Boss
+  block[334] = new Object("Images/darth_sidious_left.png",15500-34,320-41,32,41,'true');
 
+
+  /* creates random Storm Troopers in a set range and all in same y position */
   function randomTroopers(start,end,img,rangeX1,rangeX2,y) {
     for (var i=start; i <= end; i++) {
       block[i] = new Object(img,Math.floor(Math.random()*(rangeX2-rangeX1+1)+rangeX1),
@@ -237,6 +293,7 @@ for (var i=51; i<=56;i++) {
   randomTroopers(293,325,"Images/storm-shooting-left.png",11400,13500,320-41);
 
 
+  /* creates random blocks, used for asteroids and gold block areas */
   function randomBlocks(start, img, number, rangeX1, rangeX2) {
     for (var i=start; i <= number; i++) {
       block[i] = new Object(img,Math.floor(Math.random()*(rangeX2-rangeX1+1)+rangeX1),
@@ -244,13 +301,15 @@ for (var i=51; i<=56;i++) {
     }
   }
 
+  // asteroid field
   randomBlocks(62,"Images/asteroid.png",78,4550,6000);
   randomBlocks(79,"Images/asteroid2.png",90,4700,6200);
 
+  // gold block field
   randomBlocks(130,"Images/gold_block.png",230,6900,8200);
 
 
-
+  /* creates random coins in a set X range */
   var maxCoin = 130;
   var coin = new Array();
   function randomCoins(start, img, number, rangeX1, rangeX2, width, height) {
@@ -263,6 +322,7 @@ for (var i=51; i<=56;i++) {
   randomCoins(0,"Images/coin.png",20,300,8000,1,1);
   randomCoins(21,"Images/coin.png",130,6900,8300,1,1);
 
+  /* creates random health items in a set X range */
   var maxHealth = 20;
   var health = new Array();
   function randomHealth (start, img, number, rangeX1, rangeX2, width, height) {
@@ -276,16 +336,16 @@ for (var i=51; i<=56;i++) {
   randomHealth(6,"Images/health.png",20,6900,8000,5,5);
 
 
-
-var lastFrameTimeMs = 0; // The last time the loop was run
-var maxFPS = 10; // The maximum FPS to allow
+// The last time the loop was run
+var lastFrameTimeMs = 0;
+// The maximum FPS (frames per second) to allow
+var maxFPS = 10;
 var delta = 0;
 // simulate 1000 ms / 60 FPS = 16.667 ms per frame every time we run update()
 var timestep = 1000 / 60;
 
 var running = false,
     started = false;
-
 
 function game(timestamp){
   // Track the accumulated time that hasn't been simulated yet
@@ -311,82 +371,37 @@ function game(timestamp){
 
   render();
 
-  // frameID = requestAnimationFrame(game);
   requestAnimationFrame(game);
 }
 
+/*
+  update function takes in user changes to the game state
+*/
 function update(){
 
+  // keydown event listener - checks for keyCode
   window.addEventListener("keydown", function(e) {
     keys[e.keyCode] = true;
   }, false);
-
+  // keyup event listener - checks for keyCode to remove
   window.addEventListener("keyup", function(e) {
     delete keys[e.keyCode];
   }, false);
 
-  //fade out / dead
-  if (player.isAlive==false){
-   alpha =  alpha - (decayRate);
-   if (alpha < -1.0){ alpha=-1;}
- }
-  else{alpha=1;}
+/*
+  player collision with cameos audio
+*/
+  if (player.isColliding(block[8])) sndR2D2.play();
+  if (player.isColliding(block[42])) sndYoda.play();
+  if (player.isColliding(block[37])) sndChewie.play();
+  if (player.isColliding(block[27])) sndC3P0.play();
+  if (player.isColliding(block[58])) sndHanSolo.play();
+  if (player.isColliding(block[126])) sndJawa.play();
+  if (player.isColliding(block[128])) sndTusken.play();
+  if (player.isColliding(block[291])) sndJabba.play();
+  if (player.isColliding(block[292])) sndObi.play();
+  if (player.isColliding(block[290])) sndLeia.play();
 
-  // respawn with shift key down
-  if (player.isAlive==false && keys[16] ==true) {
-     player.Y=0;
-
-     Y_VELOCITY=5;
-     X_VELOCITY=3;
-
-     player.isAlive=true;
-     player.isBobba=false;
-     decayRate=.01;
-
-  }
-
-  // kill player, immediately stop scrolling
-  if (player.isAlive==false)
-  {
-     player.velocityX=0;
-     player.velocityY=0;
-
-     X_VELOCITY = 0;
-     Y_VELOCITY = 0;
-  }
-
-  // player moving left or right
-  if (keys[37]) player.velocityX = -X_VELOCITY;
-  if (keys[39]) player.velocityX = X_VELOCITY;
-
-  // only scroll if it's not a boss fight
-  if (BOBA_FIGHT == false && WAMPA_FIGHT == false) {
-
-     // side scrolling blocks
-     for(var i=0;i<=maxBlock;i++) block[i].X += -player.velocityX;
-        player.Y += player.velocityY;
-
-     // side scrolling coins
-     for(var i=0;i<=maxCoin;i++) coin[i].X += -player.velocityX;
-
-     // side scrolling health
-     for(var i=0;i<=maxHealth;i++) health[i].X += -player.velocityX;
-
-  }
-
-
-  if (BOBA_FIGHT == true){
-
-     BobaBoss(block[121]); // block 121 is boba fett boss
-  }
-
-  if (WAMPA_FIGHT == true){
-
-     WampaBoss(block[264]); // block 264 is wampa boss
-  }
-
-  console.log("wampa distance: ", block[264].X - player.X);
-  console.log("wampa y", block[264].Y);
 
   // stops player from moving
   if (!keys[37] && !keys[39] && player.velocityY == 0) player.velocityX = 0;
@@ -426,7 +441,6 @@ function update(){
    }
  }
 
-
  // player jumping
  if (player.velocityY < player.Gravity) player.velocityY += player.Weight;
 
@@ -438,49 +452,143 @@ function update(){
    }
  }
 
- function touchedCoin() {
-   for (var i=0; i<=maxCoin;i++) {
-     if (player.isColliding(coin[i])) {
-       coin[i].sprite.src = "Images/blank.png";
-       player.score += 50;
-       if(coin[i].isAlive==true) { sndCoin.play(); }
-       coin[i].isAlive = false;
-     }
-   }
+  // fade out / dead
+  if (player.isAlive==false){
+   alpha =  alpha - (decayRate);
+   if (alpha < -1.0){ alpha=-1;}
  }
+  else{alpha=1;}
 
- touchedCoin();
+  // RESPAWN at the top of the canvas with shift key down
+  if (player.isAlive==false && keys[16] ==true) {
+     player.Y=0;
 
- function touchedHealth() {
-   for (var i=0; i<=maxHealth;i++) {
-     if (player.isColliding(health[i])) {
-       health[i].sprite.src = "Images/blank.png";
-       player.HP += 50;
-       if(health[i].isAlive==true) { sndHealth.play(); }
-       health[i].isAlive = false;
-     }
-   }
- }
+     Y_VELOCITY=5;
+     X_VELOCITY=3;
 
- touchedHealth();
+     player.isAlive=true;
+     player.isBobba=false;
+     decayRate=.01;
 
- if (keys[38] && player.velocityY == 0) {
-   player.velocityY = -Y_VELOCITY;
-   sndJump.play();
- }
+  }
 
- if (player.isColliding(block[8])) sndR2D2.play();
- if (player.isColliding(block[42])) sndYoda.play();
- if (player.isColliding(block[37])) sndChewie.play();
- if (player.isColliding(block[27])) sndC3P0.play();
- if (player.isColliding(block[58])) sndHanSolo.play();
- if (player.isColliding(block[126])) sndJawa.play();
- if (player.isColliding(block[128])) sndTusken.play();
- if (player.isColliding(block[291])) sndJabba.play();
- if (player.isColliding(block[292])) sndObi.play();
- if (player.isColliding(block[290])) sndLeia.play();
+  // kill player, immediately stop scrolling
+  if (player.isAlive==false)
+  {
+     player.velocityX=0;
+     player.velocityY=0;
+
+     X_VELOCITY = 0;
+     Y_VELOCITY = 0;
+  }
+
+  // player moving left or right
+  if (keys[37]) player.velocityX = -X_VELOCITY;
+  if (keys[39]) player.velocityX = X_VELOCITY;
+
+  // player jumping
+  if (keys[38] && player.velocityY == 0) {
+    player.velocityY = -Y_VELOCITY;
+    sndJump.play();
+  }
+
+ // function for player collecting coins
+  function touchedCoin() {
+    for (var i=0; i<=maxCoin;i++) {
+      if (player.isColliding(coin[i])) {
+        coin[i].sprite.src = "Images/blank.png";
+        coin[i].Y = -100;
+        player.score += 50;
+        if(coin[i].isAlive==true) { sndCoin.play(); }
+        coin[i].isAlive = false;
+      }
+    }
+  }
+
+  touchedCoin();
+
+  // function for player collecting health
+  function touchedHealth() {
+    for (var i=0; i<=maxHealth;i++) {
+      if (player.isColliding(health[i])) {
+        health[i].sprite.src = "Images/blank.png";
+        health[i].Y = -100;
+        player.HP += 50;
+        if(health[i].isAlive==true) { sndHealth.play(); }
+        health[i].isAlive = false;
+      }
+    }
+  }
+
+  touchedHealth();
 
 
+
+  /* SIDE SCROLLING
+     -only scroll if it's not a boss fight
+  */
+  if (BOBA_FIGHT == false && WAMPA_FIGHT == false && SIDIOUS_FIGHT == false) {
+
+     // side scrolling blocks
+     for(var i=0;i<=maxBlock;i++) block[i].X += -player.velocityX;
+        player.Y += player.velocityY;
+
+     // side scrolling coins
+     for(var i=0;i<=maxCoin;i++) coin[i].X += -player.velocityX;
+
+     // side scrolling health
+     for(var i=0;i<=maxHealth;i++) health[i].X += -player.velocityX;
+
+  }
+
+
+/*
+  Check for boss fights
+*/
+  // check for boss fight, it will happen if player walks past fett
+  if (block[121].isAlive && BOBA_FIGHT == false && player.X >= block[121].X) {
+     BOBA_FIGHT = true;
+     console.log("BOBA FIGHT!");
+  }
+
+  // check for boss fight, it will happen if player walks near wampa
+  if (block[264].isAlive && WAMPA_FIGHT == false && ((block[264].X - player.X) <= 265)) {
+     WAMPA_FIGHT = true;
+     console.log("WAMPA FIGHT!");
+  }
+
+  // check for boss fight, it will happen if player walks near sidious
+  if (block[334].isAlive && SIDIOUS_FIGHT == false && ((block[334].X - player.X) <= 290)) {
+     SIDIOUS_FIGHT = true;
+     console.log("SIDIOUS FIGHT START!");
+  }
+
+
+/*
+  Starts boss fight functions
+*/
+  if (BOBA_FIGHT == true){
+
+     BobaBoss(block[121]); // block 121 is boba fett boss
+  }
+
+  if (WAMPA_FIGHT == true){
+
+     WampaBoss(block[264]); // block 264 is wampa boss
+  }
+
+  if (SIDIOUS_FIGHT == true){
+
+    SidiousBoss(block[334]); // block 334 is darth sidious boss
+  }
+
+  // for testing
+  console.log("sidious distance: ", block[334].X - player.X);
+  console.log("sidious y", block[334].Y);
+  console.log("sidious y", block[334].Y_VELOCITY);
+
+
+ // enemy shooting beam function (mostly for storm troopers)
  function isShooting(enemy,beam,speed,amount) {
    if ((enemy.X - player.X) < 320 && (enemy.X - player.X) > 0) {
      if (enemy.isShooting) {
@@ -488,7 +596,6 @@ function update(){
        beam.X = enemy.X;
        beam.Y = enemy.Y;
        beam.X += -speed;
-       //console.log("BEAM!!!");
       }
       enemy.isShooting = false;
    }
@@ -501,6 +608,7 @@ function update(){
  isShooting(block[315],beam,3);isShooting(block[316],beam,3);isShooting(block[317],beam,3);isShooting(block[318],beam,3);isShooting(block[319],beam,3);isShooting(block[320],beam,3);
  isShooting(block[321],beam,3);isShooting(block[322],beam,3);isShooting(block[323],beam,3);isShooting(block[324],beam,3);isShooting(block[325],beam,3);
 
+ // function for player kills enemy
  function killsEnemy(enemy) {
      if (keys[32] && player.isColliding(enemy) && enemy.isAlive) {
        enemy.sprite.src = "Images/blank.png";
@@ -518,37 +626,24 @@ function update(){
   killsEnemy(block[314]);killsEnemy(block[315]);killsEnemy(block[316]);killsEnemy(block[317]);killsEnemy(block[318]);killsEnemy(block[319]);
   killsEnemy(block[320]);killsEnemy(block[321]);killsEnemy(block[322]);killsEnemy(block[323]);killsEnemy(block[324]);killsEnemy(block[325]);
 
-function laserBeam(beam,speed,yoffset) {
-   beam.X += -speed;
- //  beam.Y += yoffset;
-   if (beam.X <= -500) // if it's off screen far enough, start it again
-   {
-     beam.X = player.X + 500;   // put it 500 in front of the player
-     //beam.Y = player.Y;       // straight in their face
-     beam.Y = player.Y +( (50 + Math.random() *10) * DIRECTION );  // set the yaxis close to the player, at a random distance
-     if (beam.Y < 0) {beam.Y=0}; // don't let beam off screen
+  // random laser beams throughout the game (keeps players on their toes)
+  function laserBeam(beam,speed,yoffset) {
+     beam.X += -speed;
+   //  beam.Y += yoffset;
+     if (beam.X <= -500) // if it's off screen far enough, start it again
+     {
+       beam.X = player.X + 500;   // put it 500 in front of the player
+       beam.Y = player.Y +( (50 + Math.random() *10) * DIRECTION );  // set the yaxis close to the player, at a random distance
+       if (beam.Y < 0) {beam.Y=0}; // don't let beam off screen
+     }
    }
- }
-// if not BOBA_FIGHT...
-laserBeam(beam, Math.random() *18 +1, Math.random() * 3+1 * DIRECTION);
 
+  laserBeam(beam, Math.random() *18 +1, Math.random() * 3+1 * DIRECTION);
 
-
-// check for boss fight, it will happen if player walks past fett
-if (block[121].isAlive && BOBA_FIGHT == false && player.X >= block[121].X) {
-   BOBA_FIGHT = true;
-}
-
-// check for boss fight, it will happen if player walks near wampa
-if (block[264].isAlive && WAMPA_FIGHT == false && ((block[264].X - player.X) <= 265)) {
-   WAMPA_FIGHT = true;
-   console.log("WAMPA FIGHT!");
-}
 
 
  // PLAYER KILLED BY BEAM
  if (player.isColliding(beam)) {
-   //player.sprite.src = "Images/8.png";
    if(player.isAlive) {sndDies.play();}
    player.isAlive=0; // kill player here...
    player.isBoba=1;  // when killed by a beam, draw boba fett...
@@ -565,6 +660,7 @@ if (block[264].isAlive && WAMPA_FIGHT == false && ((block[264].X - player.X) <= 
    decayRate=.01; // no boba to look at, fade out faster
  }
 
+ // check for player dies and play audio
  if (player.isAlive==0) sndDies.play();
 
 }
@@ -572,6 +668,7 @@ if (block[264].isAlive && WAMPA_FIGHT == false && ((block[264].X - player.X) <= 
 function render(){
   grafx.clearRect(0,0,gameCanvas.width,gameCanvas.height);
 
+  // draw block objects in array
   for (var i=0; i<=maxBlock;i++)
       { grafx.drawImage(block[i].sprite,block[i].X,block[i].Y); }
 
@@ -579,19 +676,23 @@ function render(){
   SCALE = SCALE + DIRECTION;
   if (SCALE < 10 || SCALE > 20){ DIRECTION = DIRECTION * -1;}
 
+  // draw coin objects in array and scale them
   for (var i=0; i<=maxCoin; i++)
       {
         if(coin[i].isAlive == true) {grafx.drawImage( coin[i].sprite, coin[i].X, coin[i].Y,SCALE,20); }
   }
 
+  // draw health objects in array and scale them
   for (var i=0; i<=maxHealth; i++)
       {
         if(health[i].isAlive == true) {grafx.drawImage( health[i].sprite, health[i].X, health[i].Y,SCALE,20); }
   }
 
+  // draw beams
   grafx.drawImage(beam.sprite,beam.X,beam.Y);
 
-  grafx.globalAlpha = alpha; // fade in/out this much
+  // fade in/out
+  grafx.globalAlpha = alpha;
 
   //draw big fett
   if (player.isAlive==false && player.isBoba)
@@ -643,12 +744,41 @@ function render(){
             grafx.drawImage(bossIcicles[i].sprite,bossIcicles[i].X,bossIcicles[i].Y);
             //should set up an array of icicles with time to live counter.
 
-
             if (bossIcicles[i].isColliding(player)) {
                   bossIcicles[i].isAlive=false;
                   icicle.sprite.src = "Images/ice.png";
-                  // sndExplode.play();
                   grafx.drawImage(icicle.sprite,bossIcicles[i].X,bossIcicles[i].Y)
+                  player.isAlive=0; // kill player here...
+                  player.isBoba=1;  // when killed by a beam, draw boba fett...
+                  decayRate=.003;   // fade to black on death slower than falling off the screen so we see fett dance
+                  player.HP -= 30;
+            }
+        }
+      }
+  }
+
+  //if darth sidious is alive and has lightening, draw the lightening that are alive then check for player collision
+  if(player.isAlive == true && SIDIOUS_FIGHT==true && block[334].isAlive)
+  {
+     for (var i=0;i < bossLightening.length;i++)
+     {
+        if (bossLightening[i].isAlive==true)
+        {
+            grafx.drawImage(bossLightening[i].sprite,bossLightening[i].X,bossLightening[i].Y);
+            //should set up an array of lightening with time to live counter.
+
+            for (var j=0; j<=maxBlock; j++){
+            if (bossLightening[i].isColliding(block[j])) {
+                  bossLightening[i].isAlive=false;
+                  lightening.sprite.src = "Images/lightening.png";
+                  grafx.drawImage(lightening.sprite,bossLightening[i].X,bossLightening[i].Y)
+               }
+             }
+
+            if (bossLightening[i].isColliding(player)) {
+                  bossLightening[i].isAlive=false;
+                  lightening.sprite.src = "Images/lightening.png";
+                  grafx.drawImage(lightening.sprite,bossLightening[i].X,bossLightening[i].Y)
                   player.isAlive=0; // kill player here...
                   player.isBoba=1;  // when killed by a beam, draw boba fett...
                   decayRate=.003;   // fade to black on death slower than falling off the screen so we see fett dance
@@ -676,8 +806,6 @@ function Object(img,x,y,width,height,sound) {
   this.Y = y;
   this.Width = width;
   this.Height = height;
-  // this.sound = new Audio();
-  // this.sound.src = sound;
   this.previousX;
   this.previousY;
   this.velocityX = 0;
@@ -698,6 +826,7 @@ function Object(img,x,y,width,height,sound) {
   this.attackCounter  = 0;
   this.missiles = new Array();
   this.icicles = new Array();
+  this.lightening = new Array();
 
   this.isColliding = function(obj) {
     if (this.X > obj.X + obj.Width) return false;
@@ -733,7 +862,7 @@ function BobaBoss(boss) {
      }
   }
 
-  // STAGES : get faster over time, drop more missisles
+  // STAGES : get faster over time, drop more missiles
   if (BOBA_BOSS_STAGE >=1) {
 
     boss.attackCounter = boss.attackCounter + 1;
@@ -816,7 +945,7 @@ function BobaBoss(boss) {
            boss.X = boss.X + trackingSpeed;}
      }
 
-     // fett apeshit
+     // fett goes crazy
      if (BOBA_BOSS_STAGE==5)
      {
         if(boss.X<=0 || boss.X_VELOCITY ==0) {boss.X_VELOCITY=Math.random()*10+1;}
@@ -826,7 +955,7 @@ function BobaBoss(boss) {
         if (boss.X >= grafx.canvas.width-32) { boss.X = 0;}
      }
 
-     // did fett walk off screen?
+     // fett can not go offscreen
      if (boss.X <= 0) {boss.X=0;}
      if (boss.X >= grafx.canvas.width) { boss.X = grafx.canvas.width;}
 
@@ -957,7 +1086,7 @@ function WampaBoss(boss) {
            break;
      }
 
-
+     // wampa stomps
      if (WAMPA_BOSS_STAGE==1)
      {
        sndWampa.play();
@@ -972,6 +1101,7 @@ function WampaBoss(boss) {
         }
      }
 
+     // wampa takes a step back and throws icicles
      if (WAMPA_BOSS_STAGE==2)
      {
        sndWampa.play();
@@ -981,13 +1111,14 @@ function WampaBoss(boss) {
        }
      }
 
-
+     // wampa charges while throwing icicles
     if (WAMPA_BOSS_STAGE==3)
     {
       sndWampa.play();
       boss.X -= 25;
     }
 
+    // wampa stomps in initial X position
     if (WAMPA_BOSS_STAGE==4)
     {
       sndWampa.play();
@@ -1004,6 +1135,7 @@ function WampaBoss(boss) {
       }
     }
 
+    // wampa charges faster
     if (WAMPA_BOSS_STAGE==5)
     {
       sndWampa.play();
@@ -1012,24 +1144,22 @@ function WampaBoss(boss) {
     }
 
 
-     // did wampa run off screen?
+     // wampa can not go offscreen
      if (boss.X <= 0) {boss.X = grafx.canvas.width;}
     // if (boss.X >= grafx.canvas.width) { boss.X = grafx.canvas.width;}
 
      // launch an icicle
      var shoot = Math.random()*100+1;
 
-     if (shoot >=0) //98-WAMPA_BOSS_STAGE
+     if (shoot >=98-WAMPA_BOSS_STAGE)
      {
 
         for(var j=0;j <numIcicles; j++) {
            if(bossIcicles[j].isAlive == false)
            {
                bossIcicles[j].isAlive = true;
-              //  bossIcicles[j].X -= 3;
-               bossIcicles[j].X_VELOCITY -= 3; //Math.random()*4-1;
+               bossIcicles[j].X_VELOCITY -= 3;
 
-              //  bossIcicles[j].X = boss.X;
                bossIcicles[j].X = boss.X-58;
                bossIcicles[j].Y = boss.Y;
 
@@ -1095,6 +1225,208 @@ function WampaBoss(boss) {
  }
 }
 
+
+function SidiousBoss(boss) {
+
+  // STAGE 0  : SHAKE
+  if (SIDIOUS_BOSS_STAGE ==0)
+  {
+
+     sndDarthSid1.play();
+
+     var rndx = Math.random()+.011;
+     var rndy = Math.random();
+
+     if (Math.random() > .5) {rndx *= -1; }
+     if (Math.random() > .5) {rndy *= -1; }
+
+     boss.attackCounter = boss.attackCounter + 1;
+
+     boss.X = boss.X + rndx;
+     boss.Y = boss.Y + rndy;
+
+     if (boss.Y < 0) {boss.Y=0};
+     if (boss.Y > 200) {boss.Y=200};
+
+     if (boss.attackCounter >= 100 && SIDIOUS_BOSS_STAGE ==0) {
+         SIDIOUS_BOSS_STAGE = 1;
+     }
+  }
+
+  // STAGES : get faster over time, throw more lightening
+  if (SIDIOUS_BOSS_STAGE >=1) {
+
+    boss.attackCounter = boss.attackCounter + 1;
+
+     var trackingSpeed=2;
+     var numlightening=1;
+
+     switch (SIDIOUS_BOSS_STAGE)
+     {
+        case 0 :
+           trackingSpeed = 0;
+           numlightening = 1;
+        case 1 :
+           trackingSpeed = 0.5;
+           numlightening = 2;
+           break;
+        case 2 :
+           trackingSpeed = 1.9;
+           numlightening = 4;
+           break;
+        case 3 :
+           trackingSpeed = 3;
+           numlightening = 6;
+        case 4 :
+           trackingSpeed = 4;
+           numlightening = 8;
+           break;
+        case 5 :
+           trackingSpeed = 0;
+           numlightening  = 12;
+           break;
+     }
+
+     // sidious tracks player and throws lightening
+     if (SIDIOUS_BOSS_STAGE==1)
+     {
+       sndLightening.play();
+
+        if (boss.Y < 50){
+          boss.Y = 50;}
+           boss.Y = boss.Y + Math.random()*2;}
+
+        if (boss.Y > player.Y){
+           boss.Y = boss.Y - trackingSpeed;}
+
+        if( boss.Y < player.Y){
+           boss.Y = boss.Y + trackingSpeed;}
+     }
+
+     // sidious runs away and hides
+     if (SIDIOUS_BOSS_STAGE==2)
+     {
+       sndLightening.play();
+
+        if (boss.Y > player.Y){
+           boss.Y = boss.Y + trackingSpeed;}
+
+        if( boss.Y < player.Y){
+           boss.Y = boss.Y - trackingSpeed;}
+
+        boss.attackCounter = boss.attackCounter+5; // expire this state quickly
+     }
+
+    // sidious tracks the player again while throwing lightening
+     if (SIDIOUS_BOSS_STAGE==3)
+     {
+       sndLightening.play();
+
+        if (boss.Y > player.Y){
+           boss.Y = boss.Y - trackingSpeed;}
+
+        if( boss.Y < player.Y){
+           boss.Y = boss.Y + trackingSpeed;}
+     }
+
+     // sidious tracks player and creeps up
+     if (SIDIOUS_BOSS_STAGE==4)
+     {
+       sndLightening.play();
+
+        if (boss.Y >32){
+           boss.Y = boss.Y - Math.random()*2;}
+
+        if (boss.Y > player.Y){
+           boss.Y = boss.Y - trackingSpeed;}
+
+        if( boss.Y < player.Y){
+           boss.Y = boss.Y + trackingSpeed;}
+     }
+
+     // sidious goes crazy
+     if (SIDIOUS_BOSS_STAGE==5)
+     {
+       sndLightening.play();
+
+        if(boss.Y<=0 || boss.Y_VELOCITY ==0) {boss.Y_VELOCITY=Math.random()*10+1;}
+        if(boss.Y>=grafx.canvas.height) { boss.Y_VELOCITY *= -1;}
+
+        boss.Y = boss.Y + Y_VELOCITY;
+        if (boss.Y >= grafx.canvas.height) { boss.Y = 0;}
+     }
+
+    // if sidious flies off screen
+     if (boss.Y <= 0) {boss.Y=0;}
+
+     // throw a lightening
+     var shoot = Math.random()*100+1;
+
+     if (shoot >=98-SIDIOUS_BOSS_STAGE)
+     {
+
+        for(var j=0;j <numlightening; j++) {
+           if(bossLightening[j].isAlive == false)
+           {
+               bossLightening[j].isAlive = true;
+               bossLightening[j].X_VELOCITY -= 3;
+
+               bossLightening[j].X = boss.X-32;
+               bossLightening[j].Y = boss.Y;
+
+               if(SIDIOUS_BOSS_STAGE==1) {
+                bossLightening[j].sprite.src ="Images/lightening.png";
+               }
+             break;
+           }
+        }
+     }
+
+     // move lightening and expire them if they go past the player...
+     for(var j=0;j < bossLightening.length; j ++)
+     {
+        if(bossLightening[j].isAlive == true)
+        {
+             bossLightening[j].X = bossLightening[j].X + bossLightening[j].X_VELOCITY;
+        }
+        if (bossLightening[j].X <= grafx.canvas.width - 600) {
+           bossLightening[j].isAlive = false;
+        }
+     }
+
+     // increment the boss battle stage
+     // he gets progressively faster/throws more lightening then starts over
+     if (boss.attackCounter > 300){
+
+        boss.attackCounter = 0;
+
+        SIDIOUS_BOSS_STAGE = SIDIOUS_BOSS_STAGE + 1;
+
+        if (SIDIOUS_BOSS_STAGE > 5) {
+           SIDIOUS_BOSS_STAGE = 1
+         };
+     }
+
+
+  // move the player now, not the blocks and bind the player to the battle field (screen)
+  player.X += player.velocityX;
+  player.Y += player.velocityY;
+
+  if (player.X < 0) { player.X = 0;}
+  if (player.X > grafx.canvas.width-32){ player.X = grafx.canvas.width-32;}
+
+  // end boss fight
+  if (keys[32] && player.isColliding(block[334]) && block[334].isAlive) {
+    block[334].sprite.src = "Images/blank.png";
+    block[334].Y = -100;
+    player.score += 10000;
+    if(block[334].isAlive==true) { sndClash.play(); }
+    block[334].isAlive = false;
+    player.X = 280;
+    SIDIOUS_FIGHT = false;
+  }
+
+}
 
 
 </script>
