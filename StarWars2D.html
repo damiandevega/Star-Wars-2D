@@ -1,5 +1,5 @@
 <body></body>
-<audio id="theme1" src="Audio/star-wars-cantina-song.mp3" onended="theme1End()"></audio>
+<!--<audio id="theme1" src="Audio/star-wars-cantina-song.mp3" onended="theme1End()"></audio> -->
 <canvas id="graphics" width=600 height=400 style="position:absolute;top:0;left:0;background-image:url('Images/background.png');"></canvas>
 <script type="text/javascript" src="Config/mapLevels.json"></script>
 
@@ -84,12 +84,27 @@ player.Weight = 0.1;
 var keys = [];
 
 
+
+
+var theme1 = new Audio("Audio/star-wars-cantina-song.mp3");
+var theme2 = new Audio("Audio/imperial_march.mp3");
+var theme3 = new Audio("Audio/star-wars-theme-song.mp3");
+theme1.addEventListener('ended', function() {
+    this.currentTime = 0;
+    this.play();
+}, false);
+
+  theme1.play();
+
+
+
 /* main game theme (Cantina song) */
-var theme1 = document.getElementById("theme1");
-    theme1.play();
-function theme1End() {
-    theme1.play();
-}
+    //theme1 = document.getElementById("theme1");
+
+// function theme1End() {
+//     if (theme1.play() == false) theme1.play();
+// }
+// theme1End();
 
 /* audio variables to be accessed as needed */
 var sndJump = new Audio("Audio/Jump.mp3");
@@ -523,7 +538,6 @@ function update(){
   touchedHealth();
 
 
-
   /* SIDE SCROLLING
      -only scroll if it's not a boss fight
   */
@@ -568,9 +582,23 @@ function update(){
   Starts boss fight functions
 */
   if (BOBA_FIGHT == true){
+      theme1.pause();
+      theme2.play();
 
      BobaBoss(block[121]); // block 121 is boba fett boss
+
+  } else {
+    theme2.pause();
+    theme1.play();
   }
+
+  // if (BOBA_FIGHT == true) {
+  //   theme1.pause();
+  //   theme2.play();
+  // } else {
+  //   theme2.pause();
+  //   theme1.play();
+  // }
 
   if (WAMPA_FIGHT == true){
 
